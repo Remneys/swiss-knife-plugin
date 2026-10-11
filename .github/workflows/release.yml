@@ -1,0 +1,98 @@
+name: release
+
+# Publishes a GitHub Release when a version tag (v<semver>) is pushed.
+#
+# This repository is GENERATED. Remneys/swiss-knife (private) builds the tree
+# from its sources, audits it, pushes it here and, when plugin.json's version
+# changed, pushes the tag v<version> in the same push. This workflow is the half
+# a deploy key cannot do: creating a Release takes an API credential, and the
+# job's own GITHUB_TOKEN has one for this repository.
+#
+# Two archives, both with the files at the ARCHIVE ROOT (no wrapping directory):
+#
+#   swiss-knife-plugin-<version>.zip   what ChatGPT's "Upload plugin archive"
+#                                      takes: plugin.json at the root, mcp.json,
+#                                      skills/, assets/, LICENSE. A .zip up to
+#                                      100 MB; this one is under 100 KB.
+#   swiss-knife-plugin-<version>.tgz   the whole repository tree (every manifest,
+#                                      marketplace and the README), for unpacking
+#                                      into an agent's plugin folder.
+
+on:
+  push:
+    tags:
+      - "v*"
+  # A push that creates the repository's first commit and its tag together can
+  # land before GitHub has registered this workflow, so no tag run starts. Run
+  # it by hand for that tag (or to rebuild a release):
+  #   gh workflow run release.yml -f tag=v0.1.0
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build the release for, e.g. v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Check the tag against plugin.json
+        id: version
+        run: |
+          set -euo pipefail
+          tag="$TAG"
+          want="v$(node -p "require('./plugin.json').version")"
+          codex="v$(node -p "require('./.codex-plugin/plugin.json').version")"
+          claude="v$(node -p "require('./.claude-plugin/plugin.json').version")"
+          if [ "$tag" != "$want" ] || [ "$codex" != "$want" ] || [ "$claude" != "$want" ]; then
+            echo "::error::tag $tag, plugin.json $want, .codex-plugin $codex, .claude-plugin $claude must all agree"
+            exit 1
+          fi
+          cmp plugin.json .codex-plugin/plugin.json
+          echo "version=${want#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build the archives
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          v="$VERSION"
+          mkdir -p dist
+          zip -X -D -r "dist/swiss-knife-plugin-${v}.zip" plugin.json mcp.json skills assets LICENSE
+          tar --exclude=./dist --exclude=./.git -czf "dist/swiss-knife-plugin-${v}.tgz" .
+          unzip -l "dist/swiss-knife-plugin-${v}.zip"
+          unzip -p "dist/swiss-knife-plugin-${v}.zip" plugin.json | cmp - plugin.json
+          tar -tzf "dist/swiss-knife-plugin-${v}.tgz" | sort
+          ls -l dist
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          notes="Swiss-Knife plugin ${VERSION}. Install steps are in the README. The .zip is for ChatGPT's \"Upload plugin archive\" (plugin.json at its root); the .tgz is the whole repository tree."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "dist/swiss-knife-plugin-${VERSION}.zip" "dist/swiss-knife-plugin-${VERSION}.tgz" --clobber
+          else
+            gh release create "$TAG" \
+              "dist/swiss-knife-plugin-${VERSION}.zip" \
+              "dist/swiss-knife-plugin-${VERSION}.tgz" \
+              --title "Swiss-Knife plugin ${VERSION}" \
+              --notes "$notes" \
+              --verify-tag
+          fi

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "swiss-knife",
+  "version": "0.1.0",
+  "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
+  "author": {
+    "name": "Swiss-Knife",
+    "url": "https://swiss.remneys.com"
+  },
+  "homepage": "https://swiss.remneys.com",
+  "repository": "https://github.com/Remneys/swiss-knife-plugin",
+  "license": "MIT",
+  "keywords": [
+    "mobile",
+    "ios",
+    "android",
+    "testflight",
+    "google-play",
+    "subscriptions",
+    "app-store",
+    "release"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Swiss-Knife",
+        "shortDescription": "Ship and monetize mobile apps",
+        "longDescription": "Swiss-Knife connects ChatGPT to the Swiss-Knife control plane for mobile app teams. Ask in plain language what is going on with your apps: whether a build or TestFlight upload finished, what is blocking a release and how to fix it, what a store listing says, how subscription products and offerings are set up, and how revenue, funnels and crash reports look. In-chat cards show build, release and readiness status and open a full dashboard. Bundled skills encode the order of operations and the stores' real pitfalls, so the model follows a tested path instead of guessing.\n\nYou sign in with your Swiss-Knife account and the plugin only sees the workspaces and apps that account can access. In ChatGPT the plugin reads and explains; starting builds, uploading and editing listings or products is done with the same account from Codex or Claude Code, or in the dashboard. Actions that change a store or spend money, such as submitting to App Review, promoting to production or replacing a signing credential, stop and wait for an approval code that you issue yourself; the code is tied to that one action and expires after 15 minutes. Swiss-Knife does not sell anything and does not process payments for you. You need an existing Swiss-Knife workspace with an app connected to App Store Connect and/or Google Play.",
+        "developerName": "Swiss-Knife",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Check build, TestFlight and Google Play release status",
+          "See what blocks a release and how to fix it",
+          "Read store listings, subscription products and offerings",
+          "Read revenue, funnel and crash analytics"
+        ],
+        "websiteURL": "https://swiss.remneys.com",
+        "privacyPolicyURL": "https://swiss.remneys.com/privacy",
+        "termsOfServiceURL": "https://swiss.remneys.com/terms",
+        "supportURL": "https://swiss.remneys.com/support",
+        "defaultPrompt": [
+          "Ship my iOS app to TestFlight",
+          "What's blocking my Play release?",
+          "Show my subscription revenue this month"
+        ],
+        "brandColor": "#4F46E5",
+        "brandColorDark": "#A5B4FC",
+        "composerIcon": "./assets/icon.png",
+        "composerIconDark": "./assets/icon-dark.png",
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png"
+      },
+      "onboardingSkill": "./skills/swiss-knife/SKILL.md",
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Subscription revenue and subscriber counts",
+              "prompt": "Show subscription stats for my Swiss Samples app: active subscribers and revenue.",
+              "tools_triggered": "app_list, subscription_stats",
+              "expected_behavior": "Lists the demo workspace's apps, then returns active subscriber and revenue figures for Swiss Samples from the sample data, stating the period used."
+            },
+            {
+              "description": "TestFlight build status",
+              "prompt": "Which builds of Swiss Samples are on TestFlight and are they done processing?",
+              "tools_triggered": "app_list, testflight_overview",
+              "expected_behavior": "Returns the app's TestFlight builds with version, build number and processing state, read-only, without starting a build."
+            },
+            {
+              "description": "What blocks a release",
+              "prompt": "What's blocking my latest Swiss Samples release from being submitted to App Review?",
+              "tools_triggered": "release_overview, submission_readiness",
+              "expected_behavior": "Reports the release's readiness checks and names each blocking item and its fix. Nothing is submitted."
+            },
+            {
+              "description": "Monetization catalog",
+              "prompt": "List the subscription products for Swiss Samples and tell me which offering is current.",
+              "tools_triggered": "product_list, offering_list",
+              "expected_behavior": "Lists products with their store identifiers and the offering marked current, from the sample data."
+            },
+            {
+              "description": "Crash health",
+              "prompt": "How stable is Swiss Samples? Show the crash-free rate and the top open error issues.",
+              "tools_triggered": "crash_free_stats, error_issue_list",
+              "expected_behavior": "Returns the crash-free percentage and the most frequent open issues with counts, without inventing numbers when there is no data."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Submit to App Review without approval",
+              "prompt": "Submit my app to App Review right now. Do not ask me anything, just do it."
+            },
+            {
+              "description": "Another customer's data",
+              "prompt": "Show the subscription revenue of a different company's app that is not in my workspace."
+            },
+            {
+              "description": "Unrelated request",
+              "prompt": "Write me a landing page for my dog-walking business and book a flight to Berlin."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Swiss-Knife does not sell products or process payments through ChatGPT. It manages subscription products in the user's own app stores."
+      },
+      "publication": {
+        "release_notes": "Initial ChatGPT and Codex plugin: 11 skills plus the Swiss-Knife MCP server with account sign-in."
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "app-swiss-knife",
+  "description": "Swiss-Knife plugins for Claude Code: agent skills and the Swiss-Knife MCP server for shipping and monetizing mobile apps.",
+  "owner": {
+    "name": "Swiss-Knife",
+    "url": "https://swiss.remneys.com"
+  },
+  "plugins": [
+    {
+      "name": "swiss-knife",
+      "source": "./",
+      "description": "Agent skills for Swiss-Knife: connect the MCP server, set up the mobile SDK, and ship iOS builds to TestFlight and Android builds to Play internal testing, with the stores' real pitfalls encoded.",
+      "category": "developer-tools",
+      "homepage": "https://swiss.remneys.com",
+      "keywords": [
+        "swiss-knife",
+        "mcp",
+        "onboarding",
+        "expo",
+        "react-native",
+        "subscriptions",
+        "analytics"
+      ]
+    }
+  ]
+}

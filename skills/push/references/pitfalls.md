@@ -1,0 +1,24 @@
+# Push pitfalls
+
+Read when a dry run, send or delivery check goes wrong.
+
+## Failure table
+
+| Situation                                            | What to do                                                                                                                                                                                                                           |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `human_action` in any answer                         | Relay verbatim, STOP, wait, then call its `verify_with` tool.                                                                                                                                                                        |
+| Replace refused, needs an approval code              | `swiss-knife:approval_request` (`push_credentials_set`, `app_project_id`, `kind`), relay, wait, repeat with `approval`.                                                                                                              |
+| `invalid_request` (400)                              | Fix the payload: an alert needs `title` or `body`; `target` is exactly one of `{"user_ids": [...]}`, `{"device_ids": [...]}`, `{"all": true}`; `data` keys `aps`, `sk`, `sk_*` are reserved; `collapse_id` is at most 64 characters. |
+| `credentials_missing` (422)                          | Save the key for the provider of the targeted devices (references/credentials.md).                                                                                                                                                   |
+| `not_found` (404)                                    | Wrong `message_id` or `app_project_id`; list with `swiss-knife:push_message_list`.                                                                                                                                                   |
+| `conflict` (409) on cancel                           | Already `completed`, `failed` or `canceled`; nothing to cancel.                                                                                                                                                                      |
+| Dry run warns `no apns_key credential is configured` | Those devices will fail; save the key before the real send.                                                                                                                                                                          |
+| Dry run `targeted_devices: 0`                        | Not registered, or not linked to that `user_id`; see references/sdk-registration.md. A real send to nobody records a `completed` message with 0 targets.                                                                             |
+| Message `failed`, `error` set                        | A credential problem stopped it; the human replaces the key. Do not re-send in a loop.                                                                                                                                               |
+| Message `failed`, no `error`                         | Every targeted device was dead or refused; read `delivery_stats.errors`.                                                                                                                                                             |
+| Real send retried                                    | Always pass an `idempotency_key`; a repeat returns the original with `deduplicated: true`.                                                                                                                                           |
+| Scheduled push is wrong                              | `swiss-knife:push_message_cancel` while it is `scheduled`, then send again.                                                                                                                                                          |
+
+## Reading delivery_stats
+
+`delivery_stats.by_status` counts deliveries (`pending`, `sending`, `sent`, `failed`, `invalid_token`, `canceled`); `errors` counts provider error codes. An `invalid_token` delivery makes the device inactive until it registers a different token. `topic_mismatch` means a device reported another bundle id than the APNs key's `bundle_id` (a dev build or another app): only that device fails. Retryable provider errors are retried with backoff, then fail as `retries_exhausted`. `received` and `opened` count only what the app's SDK reported.
