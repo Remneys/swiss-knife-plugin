@@ -164,8 +164,9 @@ the integration works from the files alone: say what you could not verify.
 ## Native and other stacks
 
 Native iOS, native Android and unrecognised stacks use the sibling skill
-**setup-native** in place of Step 5. If it is not available (you arrived through
-the bare MCP prompt), say so and point the user at
-`skills/setup-native/SKILL.md` in the public plugin repository
-(`github.com/Remneys/swiss-knife-plugin`, or `npx skills add Remneys/swiss-knife-plugin`)
-rather than improvising a native recipe from memory.
+**setup-native** in place of Step 5. If it is not loaded as a skill (you arrived
+through the bare MCP prompt), read it through the server instead: the
+`setup-native` prompt, the resource `skill://swiss-knife/setup-native/SKILL.md`,
+or `swiss-knife:skill_get` with `name: setup-native` (the public plugin repository,
+`github.com/Remneys/swiss-knife-plugin`, has the same file). Never improvise a native
+recipe from memory.

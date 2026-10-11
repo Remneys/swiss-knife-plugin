@@ -89,7 +89,7 @@ A code is bound to the exact action; if the arguments change, ask again.
 
 ## Rules
 
-- Do everything a tool can do through the tools; do not send the user to a settings
-  page or tell them to click anything unless a `human_action` says so.
+- Do everything a tool can do through the tools. Send the user somewhere, or ask
+  them to do something by hand, only when a `human_action` says so.
 - Retry a failed call only when `error.retryable` is true. `invalid_request`: fix
   the arguments. `precondition_failed`: change the state first.

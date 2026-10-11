@@ -62,4 +62,4 @@ Full table in references/pitfalls.md (read when any step fails or a refusal appe
 - `offer_id_already_used` / `offer_id_conflict` -> offer ids are unique across every offer kind. Pick a new id; never adopt the existing one.
 - `conflict` from `swiss-knife:offering_create` -> the slug exists. List and reuse; do not create again.
 
-For the app side (reading offerings and entitlements in code) go to `setup-sdk`. For builds and review go to `ship-ios` / `ship-android`.
+For the app side (reading offerings and entitlements in code) use `setup-sdk`. For builds and review use `ship-ios` / `ship-android`.

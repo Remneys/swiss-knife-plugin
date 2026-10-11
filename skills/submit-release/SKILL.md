@@ -13,7 +13,7 @@ Success: the store itself says so. iOS: `swiss-knife:submission_status` after `s
 - Approval codes come from a signed-in human via `swiss-knife:approval_request`; never invent one. Call it with the gated tool and the same arguments, tell the user what `what_it_grants_in_plain_words` says, send them to `approve.url`, wait for the code, then repeat the SAME call with `dry_run: false` and `approval`. A code is single-use, bound to that exact action (a different `rollout_fraction: 0.5`, `fraction` or `replace_in_review` needs a new one) and expires.
 - Always start with `dry_run: true` (the default) on every gated tool. Only the user's own words ("submit it", "ship it to 10%") start a real run; "check if it is ready" never does.
 - Never set `replace_in_review`, `confirm_full_release`, `acknowledgements` or `provenance_override_reason` on your own. Each is the user's call; the override reason is their words, not yours.
-- Never go to 100% (`rollout_fraction: 1`) unless the user asked for everyone at once.
+- Never move to 100% (`rollout_fraction: 1`) unless the user asked for everyone at once.
 
 ## Checklist
 

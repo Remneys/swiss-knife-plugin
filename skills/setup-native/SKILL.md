@@ -13,9 +13,11 @@ data)** and **Step 9 (verify and hand off)** all live in the main skill and all
 still apply — this file replaces **Step 5 (SDK integration)** only.
 
 If the user reached the wizard through the bare MCP prompt
-(`/mcp__swiss-knife__setup`) and you cannot load this skill, say so plainly and
-point at this file in the public plugin repository:
-`skills/setup-native/SKILL.md` in `github.com/Remneys/swiss-knife-plugin`.
+(`/mcp__swiss-knife__setup`), this file is served by the same server: the
+`setup-native` prompt, the resource `skill://swiss-knife/setup-native/SKILL.md`,
+or `swiss-knife:skill_get` with `name: setup-native`. The public plugin
+repository has the same file: `skills/setup-native/SKILL.md` in
+`github.com/Remneys/swiss-knife-plugin`.
 
 ---
 
