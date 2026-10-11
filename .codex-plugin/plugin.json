@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",
@@ -56,33 +56,33 @@
           "positive": [
             {
               "description": "Subscription revenue and subscriber counts",
-              "prompt": "Show subscription stats for my Swiss Samples app: active subscribers and revenue.",
+              "prompt": "Show subscription stats for my Demo Piano app: active subscribers and revenue.",
               "tools_triggered": "app_list, subscription_stats",
-              "expected_behavior": "Lists the demo workspace's apps, then returns active subscriber and revenue figures for Swiss Samples from the sample data, stating the period used."
+              "expected_behavior": "Lists the Swiss Knife Demo workspace's two apps (Demo Piano and Demo Fitness), then returns Demo Piano's active subscribers (about 40), trials (a handful), MRR in USD (low hundreds) and churn rate. Sample data: the figures move a little as sample subscriptions renew."
             },
             {
               "description": "TestFlight build status",
-              "prompt": "Which builds of Swiss Samples are on TestFlight and are they done processing?",
+              "prompt": "Which builds of Demo Piano are on TestFlight and are they done processing?",
               "tools_triggered": "app_list, testflight_overview",
-              "expected_behavior": "Returns the app's TestFlight builds with version, build number and processing state, read-only, without starting a build."
+              "expected_behavior": "Returns Demo Piano's TestFlight builds with build number, processing and beta state: builds 35, 37, 38 and 39 processed (38 in beta testing, 35 expired) and build 40 still processing, plus two beta groups and eight testers. Read-only: no build is started and no store is called."
             },
             {
               "description": "What blocks a release",
-              "prompt": "What's blocking my latest Swiss Samples release from being submitted to App Review?",
-              "tools_triggered": "release_overview, submission_readiness",
-              "expected_behavior": "Reports the release's readiness checks and names each blocking item and its fix. Nothing is submitted."
+              "prompt": "What's blocking my latest Demo Piano release from being submitted to App Review?",
+              "tools_triggered": "release_list, release_overview, submission_readiness",
+              "expected_behavior": "Finds release 2.5.0 as the latest (draft: the iOS build 41 failed in managed signing and Android build 252 finished) and reports that submission readiness is blocked because no App Store Connect API key is saved, with the fix. Nothing is submitted."
             },
             {
               "description": "Monetization catalog",
-              "prompt": "List the subscription products for Swiss Samples and tell me which offering is current.",
+              "prompt": "List the subscription products for Demo Piano and tell me which offering is current.",
               "tools_triggered": "product_list, offering_list",
-              "expected_behavior": "Lists products with their store identifiers and the offering marked current, from the sample data."
+              "expected_behavior": "Lists Demo Piano's five products (Pro Monthly, Pro Yearly and Lifetime Unlock on iOS; Pro Monthly and Pro Yearly on Android) with their store identifiers, and says the offering \"Default paywall\" is current while \"Spring promo\" is a draft."
             },
             {
               "description": "Crash health",
-              "prompt": "How stable is Swiss Samples? Show the crash-free rate and the top open error issues.",
+              "prompt": "How stable is Demo Piano? Show the crash-free rate and the top open error issues.",
               "tools_triggered": "crash_free_stats, error_issue_list",
-              "expected_behavior": "Returns the crash-free percentage and the most frequent open issues with counts, without inventing numbers when there is no data."
+              "expected_behavior": "Returns crash-free sessions and users (about 98 to 99 percent over the window) and the four open issues ranked by events with their user counts, the TypeError on song.notes.length first, then the EXC_BAD_ACCESS in AudioEngine.scheduleBuffer, the Android MidiDevice NullPointerException and the OutOfMemoryError. No invented numbers."
             }
           ],
           "negative": [
