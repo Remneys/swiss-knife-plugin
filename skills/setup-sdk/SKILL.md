@@ -3,15 +3,6 @@ name: setup-sdk
 description: Provisions Swiss-Knife and wires its mobile SDK into an Expo or React Native app, end to end - adopts the user's existing workspace and app (creates one only when nothing exists), mints the project token, writes .mcp.json / .envrc / .env, installs the SDK, wires identity, analytics and the user's data, and runs a getOfferings() smoke test. Safe to re-run. Use when the user wants to set up, onboard, add or connect Swiss-Knife (subscriptions, analytics, crash reporting, install attribution) to a mobile project. Native iOS and Android continue in setup-native. Not for shipping builds (use ship-ios / ship-android).
 ---
 
-<!-- SYNC: This file is the SOURCE OF TRUTH. The wizard body below (from
-     "# Swiss-Knife setup wizard" to the end of the file), followed by every
-     references/*.md file in the order this file first links them, is mirrored
-     VERBATIM in apps/web/src/lib/mcp/prompts/setup-playbook.ts, which backs the
-     /mcp__swiss-knife__setup MCP prompt (the no-plugin path).
-     After editing this file or a reference run `pnpm gen:playbook` to regenerate
-     the .ts - do not hand-edit it. The drift guard is
-     apps/web/src/lib/mcp/__tests__/setup-playbook-sync.test.ts. -->
-
 # Swiss-Knife setup wizard
 
 Provision the backend and wire the SDK into the user's project so that, at the

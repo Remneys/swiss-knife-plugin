@@ -14,19 +14,19 @@ It bundles two things:
   Swiss-Knife account; the plugin only sees the workspaces and apps that account
   can open.
 
-| Skill            | Use it to                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `swiss-knife`    | Connect the MCP server, start with `help`, pick a skill, relay human steps and approvals.              |
-| `setup-sdk`      | Provision a workspace and app and wire the mobile SDK (Expo / React Native).                           |
-| `setup-native`   | The native iOS / Android half of the setup wizard (SwiftPM and Gradle recipes).                        |
-| `ship-ios`       | Build an iOS app and put it in TestFlight, checked against App Store Connect.                          |
-| `ship-android`   | Build an Android app and put it on the Play internal track, checked against Google Play.               |
-| `store-listings` | Edit listing text, translations, screenshots and age rating on both stores, checked against the store. |
-| `submit-release` | Submit for review, phased rollout and promotion, with human approval codes.                            |
-| `monetization`   | Products, entitlements, offerings and the store catalogue push.                                        |
-| `push`           | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                              |
-| `observability`  | Events, funnels, subscription and crash stats, error issues and alerts.                                |
-| `sandbox`        | Rehearse a release against a simulated App Store Connect and Google Play: review, time and faults.     |
+| Skill            | Use it to                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `swiss-knife`    | Connect the MCP server, start with `help`, pick a skill, relay human steps and approvals.                 |
+| `setup-sdk`      | Provision a workspace and app and wire the mobile SDK (Expo / React Native).                              |
+| `setup-native`   | The native iOS / Android half of the setup wizard (the SDK sources vendored from the public npm package). |
+| `ship-ios`       | Build an iOS app and put it in TestFlight, checked against App Store Connect.                             |
+| `ship-android`   | Build an Android app and put it on the Play internal track, checked against Google Play.                  |
+| `store-listings` | Edit listing text, translations, screenshots and age rating on both stores, checked against the store.    |
+| `submit-release` | Submit for review, phased rollout and promotion, with human approval codes.                               |
+| `monetization`   | Products, entitlements, offerings and the store catalogue push.                                           |
+| `push`           | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                                 |
+| `observability`  | Events, funnels, subscription and crash stats, error issues and alerts.                                   |
+| `sandbox`        | Rehearse a release against a simulated App Store Connect and Google Play: review, time and faults.        |
 
 Actions that change a store or spend money (submitting to App Review,
 promoting to production, replacing a signing credential) stop and wait for an
@@ -108,8 +108,9 @@ claude mcp add --transport http swiss-knife https://swiss.remneys.com/api/mcp
 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Claude Code plugin manifest and marketplace                                |
 | `.agents/plugins/marketplace.json`                              | Codex marketplace                                                          |
 | `skills/`                                                       | The 11 skills, `skills/<name>/SKILL.md` plus `references/`                 |
-| `assets/`                                                       | Logo and composer icons (placeholder artwork)                              |
+| `assets/`                                                       | Logo and composer icons                                                    |
 | `.github/workflows/release.yml`                                 | Builds the release archives when a version tag is pushed                   |
+| `SECURITY.md`, `.github/PULL_REQUEST_TEMPLATE.md`               | How to report a problem; why a pull request here changes nothing           |
 
 Releases carry two archives, both with the files at the archive root:
 `swiss-knife-plugin-<version>.zip` (the ChatGPT upload) and

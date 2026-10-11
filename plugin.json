@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",
@@ -43,8 +43,8 @@
           "What's blocking my Play release?",
           "Show my subscription revenue this month"
         ],
-        "brandColor": "#4F46E5",
-        "brandColorDark": "#A5B4FC",
+        "brandColor": "#576CB7",
+        "brandColorDark": "#6E89E4",
         "composerIcon": "./assets/icon.png",
         "composerIconDark": "./assets/icon-dark.png",
         "logo": "./assets/logo.png",

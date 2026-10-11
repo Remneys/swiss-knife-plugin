@@ -1,6 +1,6 @@
 ---
 name: setup-native
-description: The native-stack half of the Swiss-Knife setup wizard — the vendored Swift Package (SwissKnifeiOS) and Gradle composite-build (com.appswissknife:swiss-knife-android) recipes, plus the fallback for web / unrecognized stacks. Loaded by /swiss-knife:setup-sdk when Step 1 detects a native iOS (Xcode project / Package.swift, no React Native) or native Android (Gradle + Kotlin, no React Native) project, or a stack it does not recognize. Covers the dependency, gitignored secret injection, the configure call and the getOfferings smoke test; identity and verification stay in the main setup skill.
+description: The native-stack half of the Swiss-Knife setup wizard — the recipes that vendor the iOS SDK (a local Swift package, SwissKnifeiOS) and the Android SDK (Kotlin source, com.appswissknife) out of the public npm package, plus the fallback for web / unrecognized stacks. Loaded by /swiss-knife:setup-sdk when Step 1 detects a native iOS (Xcode project / Package.swift, no React Native) or native Android (Gradle + Kotlin, no React Native) project, or a stack it does not recognize. Covers the dependency, gitignored secret injection, the configure call and the getOfferings smoke test; identity and verification stay in the main setup skill.
 allowed-tools: Read, Edit, Write, Grep, Glob, Bash(cat *), Bash(ls *)
 ---
 
@@ -21,10 +21,10 @@ point at this file in the public plugin repository:
 
 ## Native iOS (Swift / SwiftUI / UIKit)
 
-The iOS SDK is the Swift Package Manager product **`SwissKnifeiOS`**
-(`packages/swiss-knife-ios`), **iOS 15.0+**, zero external dependencies. (The
+The iOS SDK is the Swift module **`SwissKnifeiOS`**, **iOS 15.0+**, zero external
+dependencies, vendored into the app as a local Swift package (sub-step 1). (The
 React Native pod declares 15.1 — the RN/Expo default deployment target — but the
-native SPM/CocoaPods path is 15.0.) Public API:
+native path is 15.0.) Public API:
 `SwissKnife.configure(...)`, `SwissKnife.configureCore(...)`,
 `SwissKnife.configurePurchases(...)`, `SwissKnife.isConfigured`,
 `SwissKnife.isCoreConfigured`, and `try await SwissKnife.getOfferings()`.
@@ -59,36 +59,57 @@ those in Step 2, say plainly that this recipe covers `configure`, `getOfferings`
 and identity only, and that the rest isn't wired here — do **not** hand-roll
 `fetch` calls against the ingest endpoints to fake it.
 
-**1. Add the dependency (be honest: the native SDKs are not published).**
+**1. Add the dependency (vendor it from the public npm package).**
 
-> ⚠️ **The iOS SDK is not published anywhere** — no SPM tag (the repo root has
-> no `Package.swift`; the package lives in `packages/swiss-knife-ios`) and no
-> CocoaPods pod. Do not write an SPM URL dependency or a `pod` line for it; they will
-> not resolve. (This gap is native-only: the React Native package _is_ on npm.)
-> Tell the user plainly that the SDK is vendored for now, then do one of these,
-> both of which work today:
+> ⚠️ **The iOS SDK is not published to SPM or CocoaPods** — there is no
+> repository with a `Package.swift` to point a URL dependency at and no pod, so
+> an SPM URL or a `pod` line will not resolve. (This gap is native-only: the
+> React Native package _is_ on npm.) Its Swift sources ship unmodified inside the
+> public npm package `@app-swiss-knife/react-native-sdk`, so any machine with npm
+> can vendor them with no checkout of anything. Tell the user plainly that the
+> SDK is vendored, then do this from the app's root:
 
-_A. Local SPM path_ (the user has a swiss-knife checkout on disk — exactly what
-`samples/ios-app/Package.swift` does):
-
-```swift
-.package(path: "<path-to>/swiss-knife/packages/swiss-knife-ios"),
+```bash
+mkdir -p Vendor/SwissKnifeiOS/Sources
+tmp="$(mktemp -d)"
+(cd "$tmp" && npm pack @app-swiss-knife/react-native-sdk --silent && tar -xzf app-swiss-knife-react-native-sdk-*.tgz)
+cp -R "$tmp/package/ios/vendor/SwissKnifeiOS" Vendor/SwissKnifeiOS/Sources/SwissKnifeiOS
+rm -rf "$tmp"
 ```
 
-target `dependencies`:
+Then write `Vendor/SwissKnifeiOS/Package.swift` (the copied folder has no
+manifest; this is the whole of it):
 
 ```swift
-.product(name: "SwissKnifeiOS", package: "swiss-knife-ios"),
+// swift-tools-version:5.9
+import PackageDescription
+
+let package = Package(
+  name: "SwissKnifeiOS",
+  platforms: [.iOS(.v15)],
+  products: [.library(name: "SwissKnifeiOS", targets: ["SwissKnifeiOS"])],
+  targets: [.target(name: "SwissKnifeiOS", path: "Sources/SwissKnifeiOS")]
+)
 ```
 
-For an `.xcodeproj` with no `Package.swift`, add the local package via Xcode →
-File → Add Package Dependencies… → Add Local… → point at
-`packages/swiss-knife-ios`.
+The sources import Apple frameworks only (Foundation, UIKit, StoreKit, Security,
+Network and the like), so there is nothing else to resolve. Commit `Vendor/SwissKnifeiOS` so the app builds on every
+machine.
 
-_B. Vendor the sources_ (no checkout kept around): copy
-`packages/swiss-knife-ios/Sources/SwissKnifeiOS` into the app as a local Swift
-package or a target of its own. It has zero external dependencies and imports
-only system frameworks.
+If the app has a `Package.swift`, add the local package and the product to the
+target's `dependencies`:
+
+```swift
+.package(path: "Vendor/SwissKnifeiOS"),
+```
+
+```swift
+.product(name: "SwissKnifeiOS", package: "SwissKnifeiOS"),
+```
+
+For an `.xcodeproj` with no `Package.swift`, add it in Xcode → File → Add Package
+Dependencies… → Add Local… → `Vendor/SwissKnifeiOS`, and link the
+`SwissKnifeiOS` library to the app target.
 
 **2. Config / secret injection (no `EXPO_PUBLIC` on native).** The client `sdkKey`
 (`sk_live_…`, embeddable) and the origin must NOT be hardcoded into committed
@@ -186,8 +207,8 @@ light.
 
 ## Native Android (Kotlin)
 
-The Android SDK is the Gradle module **`com.appswissknife:swiss-knife-android`**
-(`packages/swiss-knife-android`), **minSdk 24**, Kotlin. Public API:
+The Android SDK is the Kotlin package **`com.appswissknife`**, **minSdk 24**,
+vendored into the app module as source (sub-step 1). Public API:
 `SwissKnife.configure(context, apiKey, proxyURL)`,
 `SwissKnife.configureCore(context, apiKey, proxyURL)`,
 `SwissKnife.configurePurchases(context, apiKey, proxyURL)`,
@@ -214,34 +235,60 @@ those in Step 2, say plainly that this recipe covers `configure`, `getOfferings`
 and identity only, and that the rest isn't wired here — do **not** hand-roll
 `fetch` calls against the ingest endpoints to fake it.
 
-**1. Add the dependency (be honest: the native SDKs are not published).**
+**1. Add the dependency (vendor it from the public npm package).**
 
-> ⚠️ **The Android SDK is not published** — no Maven Central or JitPack
-> artifact, so `implementation("com.appswissknife:swiss-knife-android:…")` does
-> not resolve on its own. (Native-only gap: the React Native package _is_ on
-> npm.) Tell the user plainly that it is vendored for now, then use a Gradle
-> **composite build** against a swiss-knife checkout, which works today. In
-> `settings.gradle` (exactly what `samples/android-maestro-app/settings.gradle`
-> does):
+> ⚠️ **The Android SDK is not published to Maven Central or JitPack**, so
+> `implementation("com.appswissknife:swiss-knife-android:…")` does not resolve.
+> (Native-only gap: the React Native package _is_ on npm.) Its Kotlin sources
+> ship unmodified inside the public npm package
+> `@app-swiss-knife/react-native-sdk` (`android/vendor/java` and
+> `android/vendor/res`), so any machine with npm can vendor them with no checkout
+> of anything. Tell the user plainly that the SDK is vendored, then copy them into
+> the app module (`app` below; use the real module name):
+
+```bash
+tmp="$(mktemp -d)"
+(cd "$tmp" && npm pack @app-swiss-knife/react-native-sdk --silent && tar -xzf app-swiss-knife-react-native-sdk-*.tgz)
+mkdir -p app/src/main/java app/src/main/res/xml
+cp -R "$tmp/package/android/vendor/java/." app/src/main/java/
+cp "$tmp/package/android/vendor/res/xml/swissknife_data_extraction_rules.xml" app/src/main/res/xml/
+rm -rf "$tmp"
+```
+
+The classes keep their `com.appswissknife.*` packages, so `import
+com.appswissknife.SwissKnife` works as shown below. The sources need these
+dependencies in the module's `build.gradle` (the same list the SDK's own build
+uses; all resolve from `google()` and `mavenCentral()`), compileSdk 35 and Java 17
+(`compileOptions` and Kotlin `jvmTarget`):
 
 ```groovy
-includeBuild("<path-to>/swiss-knife/packages/swiss-knife-android") {
-    dependencySubstitution {
-        substitute module("com.appswissknife:swiss-knife-android") using project(":")
-    }
+dependencies {
+  implementation "androidx.annotation:annotation:1.8.2"
+  implementation "androidx.security:security-crypto:1.1.0-alpha06"
+  implementation "androidx.work:work-runtime-ktx:2.9.0"
+  implementation "androidx.lifecycle:lifecycle-process:2.5.1"
+  implementation "com.android.billingclient:billing:8.0.0"
+  // The SDK ships two optional OkHttp interceptors, so OkHttp must be on the
+  // compile classpath. compileOnly: nothing is added to the app at runtime.
+  compileOnly "com.squareup.okhttp3:okhttp:4.12.0"
 }
 ```
 
-then declare the dependency in the module; the substitution above is what makes
-it resolve, to the local build:
+And in `AndroidManifest.xml`: the Play Billing permission, plus the backup rule
+that keeps the SDK's device id out of cloud backup and device transfer.
 
-```kotlin
-implementation("com.appswissknife:swiss-knife-android:0.4.0")
+```xml
+<uses-permission android:name="com.android.vending.BILLING" />
+
+<application
+    android:dataExtractionRules="@xml/swissknife_data_extraction_rules"
+    ... >
 ```
 
-Without a checkout, copy `packages/swiss-knife-android/src/main/java` and
-`src/main/res` into the app module instead (its own dependencies, Play Billing 8
-and androidx, are listed in `packages/swiss-knife-android/build.gradle`).
+If the app already sets `android:dataExtractionRules`, do not add a second one:
+copy the two `<exclude domain="sharedpref" path="swissknife_device.xml" />` lines
+from the copied rules file into the app's own rules (inside both
+`<cloud-backup>` and `<device-transfer>`), and delete the copied file.
 
 **2. Config / secret injection (via `BuildConfig`, not committed source).** Put the
 `sdkKey` + origin in a **gitignored** `secrets.properties` and expose them through
@@ -329,10 +376,12 @@ the green light.
 This caveat is **native-only**. The React Native package installs from npm like any
 other dependency; the two standalone native SDKs are not published to SPM,
 CocoaPods, Maven Central or JitPack. The dependency works today only by
-vendoring (a local SPM path / Gradle composite build against a swiss-knife
-checkout, or copying the sources in). Everything else the wizard does is
-unaffected: backend provisioning, the config files, and the exact `configure` +
-smoke-test wiring above. Say so once, calmly, and finish the wiring.
+vendoring: the sources are copied out of the public npm package into the app (a
+local Swift package, or Kotlin source in the app module), exactly as above, and
+they do not update by themselves, so re-run the copy to take a newer SDK.
+Everything else the wizard does is unaffected: backend provisioning, the config
+files, and the exact `configure` + smoke-test wiring above. Say so once, calmly,
+and finish the wiring.
 
 ---
 
