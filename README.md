@@ -37,7 +37,9 @@ expires after 15 minutes.
 
 ### Codex (app and CLI)
 
-Needs Codex 0.141 or newer.
+Needs Codex 0.162 or newer. Older versions (checked on 0.141) cannot read a plugin
+that sits at the root of a marketplace repository and list nothing from this one;
+update Codex, or use the MCP-only route below, which works from 0.141.
 
 ```bash
 codex plugin marketplace add Remneys/swiss-knife-plugin
