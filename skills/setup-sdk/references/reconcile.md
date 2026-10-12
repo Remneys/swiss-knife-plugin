@@ -16,7 +16,8 @@ If the ledger was non-empty, do **not** clobber. Instead:
   you intend to do with it: `.mcp.json` server entry, SDK dependency,
   `src/swiss-knife.ts` (or the native equivalents), root-component wiring,
   whether `Identity.logIn` is called anywhere, and which `.env` keys are real vs
-  `…_replace_me` placeholders. Never echo a full secret — prefixes only.
+  placeholders (`YOUR_SDK_KEY`, `YOUR_MCP_TOKEN`, or the older `…_replace_me`).
+  Never echo a full secret — prefixes only.
 - **Reconcile the obvious deltas without asking.** Placeholder values get filled
   in; a missing `.gitignore` line gets appended; a missing root-component call
   gets added. These are unambiguously repairs.

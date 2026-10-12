@@ -61,9 +61,9 @@ SWISS_KNIFE_MCP_TOKEN=<token from app_token_mint>
 **(d) `.env.example`** (committed — placeholders only, never real secrets):
 
 ```bash
-EXPO_PUBLIC_SWISSKNIFE_API_KEY=sk_live_replace_me
+EXPO_PUBLIC_SWISSKNIFE_API_KEY=YOUR_SDK_KEY
 EXPO_PUBLIC_SWISSKNIFE_API_URL=http://localhost:3000
-SWISS_KNIFE_MCP_TOKEN=sk_mcp_replace_me
+SWISS_KNIFE_MCP_TOKEN=YOUR_MCP_TOKEN
 ```
 
 **(e) `.envrc`** (committed) — Claude Code does **not** auto-load `.env`, so it

@@ -8,6 +8,13 @@ description: Entry point for the Swiss-Knife MCP server, which runs mobile build
 Swiss-Knife is an MCP server. Everything it does is a tool call; this skill only
 gets you connected and pointed at the right skill.
 
+**In ChatGPT** your tool list is short: the read tools, the in-chat cards, and
+`build_start` and `build_retry`. You can look at anything the account can see and
+start or retry a build. Setting things up (a workspace or an app, store or git
+credentials, a repository, uploads, App Review, listings) is done by the user
+outside the chat, for example from Claude Code. When a step needs a tool you were
+not given, say so, relay any `human_action`, and never guess a tool name.
+
 ## 1. Connect
 
 Check first: call `swiss-knife:workspace_whoami`. If it answers, you are connected;

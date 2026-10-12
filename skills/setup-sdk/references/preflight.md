@@ -146,7 +146,8 @@ offers real choices instead of blindly provisioning a duplicate.
      nothing from the dev build the user is about to test on. Carry the finding
      into Step 7 question 2; do not let them discover it themselves.
    - `.env` — are `EXPO_PUBLIC_SWISSKNIFE_API_KEY` / `SWISS_KNIFE_MCP_TOKEN` set to
-     **real** values, or still `…_replace_me` placeholders?
+     **real** values, or still placeholders (`YOUR_SDK_KEY`, `YOUR_MCP_TOKEN`,
+     or the older `…_replace_me`)?
 
    If `.env` holds a real `sk_live_…` key, note its **prefix only** (the leading
    `sk_live_` + first few chars). Never print or echo the full key. That prefix
