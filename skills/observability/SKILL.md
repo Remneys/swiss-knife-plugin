@@ -14,6 +14,7 @@ Success: every number or state you report was read from a swiss-knife tool in th
 - Never guess an event or property name. Call `swiss-knife:event_list` (and `swiss-knife:property_list` for properties) BEFORE `swiss-knife:funnel_report`, `swiss-knife:report_run` or `swiss-knife:retention_report`. A name that does not exist does not error: it returns zeros, and a zero funnel is a wrong answer, not a finding.
 - `swiss-knife:error_alert_create` is not idempotent: `swiss-knife:error_alert_list` first, then at most one create. A repeated create makes a second rule.
 - Never invent a `notifyEmail`. Use the `email` from `swiss-knife:workspace_whoami` or one the user gave in this conversation; otherwise omit it and say the rule has no recipient yet.
+- In ChatGPT and Codex only the reads exist: report with `swiss-knife:error_stats`, `swiss-knife:error_issue_list`, `swiss-knife:error_issue_detail`, `swiss-knife:error_alert_list` and the reports. Resolving, ignoring and assigning an issue and creating, changing or deleting an alert rule (`swiss-knife:error_issue_update`, `swiss-knife:error_issue_archive`, `swiss-knife:error_alert_create`, `swiss-knife:error_alert_update`, `swiss-knife:error_alert_delete`) are refused there: say they are done from Claude Code, not from this chat, and do not look for another way.
 
 ## Checklist
 

@@ -72,10 +72,12 @@ Sign in with your Swiss-Knife account when asked. ChatGPT's plugin screens
 change often: if the label differs, look for the option to add a plugin from a
 ZIP archive.
 
-In ChatGPT the plugin reads and explains (build and release status, what blocks
-a release, listings, products, revenue and crash reports) and shows in-chat
-cards. Starting builds and editing listings or products is done with the same
-account from Codex or Claude Code, or in the dashboard.
+In ChatGPT and Codex the plugin reads and explains (build and release status,
+what blocks a release, listings, products, revenue and crash reports) and shows
+in-chat cards. It does not change a store, a listing or a product there.
+Starting a build from ChatGPT needs a workspace that allows it and an approval
+code from a workspace admin. Everything else that changes something is done with
+the same account from Claude Code, or in the dashboard.
 
 ### Any other agent (skills only)
 

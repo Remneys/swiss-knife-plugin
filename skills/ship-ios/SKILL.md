@@ -14,6 +14,7 @@ Success: `swiss-knife:testflight_overview` lists the new build as processed. Our
 - Never revoke or delete a certificate, profile or credential yourself.
 - Always `swiss-knife:ship_prerequisites` and `swiss-knife:build_preflight` before `swiss-knife:build_start`.
 - Do not tell anyone to `npm install` swiss-build: it is not on npm. Its config is a plain object (see Step 3).
+- In ChatGPT and Codex you hold the read tools, plus `swiss-knife:build_start` and `swiss-knife:build_retry` where Swiss-Knife has allowed them for the workspace (otherwise the refusal carries a `human_action`). Credentials, repository connection, uploads and anything that changes a store are not offered there: do the read steps (`swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get`, `swiss-knife:testflight_overview`), name the step that needs a write, say that Claude Code does it, not this chat, and stop.
 
 ## Checklist
 

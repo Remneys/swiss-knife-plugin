@@ -15,6 +15,7 @@ Success: the push status says `applied` with `pending: false`, and the store-sid
 - Never answer a `conflict` yourself. No tool resolves one; the store's text and the draft differ and a human picks which wins.
 - Google Play language codes are Play's own, not Apple's. Never send a bare `es`, `ru`, `pt` or `zh` to Play (references/pitfalls.md has the list).
 - Pushing a listing, screenshots or age rating while an iOS version waits for review needs an approval code; a version in review refuses them, and a live version's screenshots are frozen.
+- In ChatGPT and Codex only the reads exist (`swiss-knife:listing_get`, `swiss-knife:media_list`, `swiss-knife:media_validate`, `swiss-knife:age_rating_get`, the push status tools, `swiss-knife:store_overview`): drafts and pushes are refused there. Read and explain, say that editing and publishing are done from Claude Code, not from this chat, and do not look for another way.
 
 ## Checklist
 
