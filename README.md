@@ -8,7 +8,7 @@ server (`https://swiss.remneys.com/api/mcp`).
 
 It bundles two things:
 
-- **11 agent skills** that encode the order of operations and the stores' real
+- **14 agent skills** that encode the order of operations and the stores' real
   pitfalls, so the model follows a tested path instead of guessing.
 - **The MCP server connection**, with account sign-in (OAuth). You need a
   Swiss-Knife account; the plugin only sees the workspaces and apps that account
@@ -111,7 +111,7 @@ claude mcp add --transport http swiss-knife https://swiss.remneys.com/api/mcp
 | `mcp.json`                                                      | The MCP server, `https://swiss.remneys.com/api/mcp`, streamable HTTP       |
 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Claude Code plugin manifest and marketplace                                |
 | `.agents/plugins/marketplace.json`                              | Codex marketplace                                                          |
-| `skills/`                                                       | The 11 skills, `skills/<name>/SKILL.md` plus `references/`                 |
+| `skills/`                                                       | The 14 skills, `skills/<name>/SKILL.md` plus `references/`                 |
 | `assets/`                                                       | Logo and composer icons                                                    |
 | `.github/workflows/release.yml`                                 | Builds the release archives when a version tag is pushed                   |
 | `SECURITY.md`, `.github/PULL_REQUEST_TEMPLATE.md`               | How to report a problem; why a pull request here changes nothing           |

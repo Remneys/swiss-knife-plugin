@@ -40,11 +40,13 @@ Copy and tick:
 5. **Preflight.** `swiss-knife:build_preflight` with platform `ios`. Fix each `blocking` issue, re-run. Note the `version` it reports: that is what the build will be filed under.
 6. **Build.** `swiss-knife:build_start` with platform `ios` (pass `version` on the first build of an app; the build number is assigned for you). Keep `ids.jobId`. Poll `swiss-knife:build_get` with it until `succeeded` or `failed`; on `failed` read `swiss-knife:build_logs`, then the table in references/pitfalls.md. `swiss-knife:build_start` is not idempotent: before calling it again check `swiss-knife:release_list`, or pass `cancel_previous: true`. After a failure use `swiss-knife:build_retry`, which takes a fresh build number.
 7. **Upload.** `swiss-knife:submission_upload_build` with the `release_id` (platform defaults to ios; TestFlight only, it cannot reach review). Then `swiss-knife:submission_upload_status` until `uploaded`. `blocked` carries a `human_action`: relay and stop. `failed` carries `failureReason`: see references/pitfalls.md.
-8. **Verify.** `swiss-knife:testflight_overview`: the build must be listed. If it is not, say so; do not report success from the build status.
+8. **Export compliance.** A build Apple holds at `MISSING_EXPORT_COMPLIANCE` reaches no tester. `swiss-knife:preflight_platform_requirements` (`release_id`) lists it under `exportCompliance.builds[]` with `waiting: true` and a `buildExternalId`. Ask the user whether the app uses only encryption Apple exempts (HTTPS/TLS through the operating system); never answer on your own to get a build moving. Then `swiss-knife:testflight_export_compliance_answer` with `dry_run` (the default): it sends nothing and returns the verdict, the exact `confirmation` phrase and the approval handshake. After the user's yes, `swiss-knife:approval_request`, relay, wait for the code, and send the real call (`dry_run: false`, that `confirmation`, `approval`). It is a legal declaration under US export rules; if the binary declares non-exempt encryption it is refused and a person answers in App Store Connect with the export documentation.
+9. **Verify.** `swiss-knife:testflight_overview`: the build must be listed. If it is not, say so; do not report success from the build status.
 
 ## When it breaks
 
-One line each; the full table is in references/pitfalls.md (read when any step fails).
+- Build stuck at `MISSING_EXPORT_COMPLIANCE` -> step 8; do not wait for it to clear by itself.
+  One line each; the full table is in references/pitfalls.md (read when any step fails).
 
 - `ASC_CERT_LIMIT` -> stop; offer the human a .p12 upload or a portal revoke of their choice (and, if they own a second workspace on the team that holds a certificate, a team certificate link: references/pitfalls.md). Never call `swiss-knife:signing_action` with `revoke_certificate`.
 - Private repo, clone fails -> `git_token` (fine-grained, read-only Contents).

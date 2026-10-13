@@ -49,17 +49,18 @@ SDK — see the Step 2 hazard. `isConfigured` reports the purchase engine and st
 Do Steps 1–4 first (workspace, app, token, `.mcp.json` + `.envrc` for the MCP
 token — those are stack-agnostic and still useful in an Xcode project). The SDK
 API key does **not** go in an `EXPO_PUBLIC_*` var on native — inject it as in
-sub-step 2 below. Then, instead of Step 5, do the four sub-steps below — and
+sub-step 2 below. Then, instead of Step 5, do the five sub-steps below — and
 afterwards still run **Step 6 (identity)**, **Step 8 (the user's data)** and
 **Step 9 (verify)**, which apply to every stack. The Swift identity calls are in
 Step 6.
 
 **Capability coverage on native.** The Analytics / CrashReporting / Performance /
 Attribution wiring in Step 5 is a **React-Native** surface, and so is **Step 7's
-analytics boundary** — skip it here rather than pretending. If the user ticked
-those in Step 2, say plainly that this recipe covers `configure`, `getOfferings`
-and identity only, and that the rest isn't wired here — do **not** hand-roll
-`fetch` calls against the ingest endpoints to fake it.
+analytics boundary** — skip it here rather than pretending. This recipe covers
+`configure`, `getOfferings`, identity, and the two snippets in sub-step 5 (track an
+event, read install attribution). If the user ticked crash reporting or
+performance in Step 2, say plainly that those aren't wired here — do **not**
+hand-roll `fetch` calls against the ingest endpoints to fake them.
 
 **1. Add the dependency (vendor it from the public npm package).**
 
@@ -205,6 +206,29 @@ You can't run the app here — tell the user to build + run in Xcode (or
 `xcodebuild`) on a simulator/device; the `[swiss-knife]` log on launch is the green
 light.
 
+**5. Track events and read attribution (optional).** Event names must be ones the
+user wants in analytics (`swiss-knife:event_list` shows what already exists; do
+not invent a taxonomy). Install attribution registers itself on the first launch
+after `configure` (organic unless a campaign link matched); you only read it.
+
+```swift
+import SwissKnifeiOS
+
+// once, after configure (starts session and app-lifecycle events)
+SKAnalytics.initialize(configuration: SKAnalyticsConfiguration(apiKey: SwissKnifeConfig.apiKey, serverURL: SwissKnifeConfig.proxyURL))
+
+// anywhere
+SKAnalytics.shared.track(eventType: "paywall_viewed", eventProperties: ["source": "onboarding"])
+
+// install attribution: nil until the first install registration has succeeded
+if let a = SwissKnife.Attribution.resolved { print(a.method, a.campaignId ?? "-") }
+```
+
+Verify with `swiss-knife:event_list` (the event appears within a minute of a
+foreground flush) and, for a campaign link test, `swiss-knife:attribution_report`
+(read the attribution skill's testing checklist). A deferred deep link is
+retrieved from the same resolved attribution; route on it once, on first open.
+
 ---
 
 ## Native Android (Kotlin)
@@ -225,17 +249,18 @@ engine; `isCoreConfigured` reports the core.
 
 Do Steps 1–4 first (the `.mcp.json` + `.envrc` MCP-token config still applies). The
 SDK API key does **not** go in an `EXPO_PUBLIC_*` var — inject it via `BuildConfig`
-as in sub-step 2. Then, instead of Step 5, do the four sub-steps below — and
+as in sub-step 2. Then, instead of Step 5, do the five sub-steps below — and
 afterwards still run **Step 6 (identity)**, **Step 8 (the user's data)** and
 **Step 9 (verify)**, which apply to every stack. The Kotlin identity calls are in
 Step 6.
 
 **Capability coverage on native.** The Analytics / CrashReporting / Performance /
 Attribution wiring in Step 5 is a **React-Native** surface, and so is **Step 7's
-analytics boundary** — skip it here rather than pretending. If the user ticked
-those in Step 2, say plainly that this recipe covers `configure`, `getOfferings`
-and identity only, and that the rest isn't wired here — do **not** hand-roll
-`fetch` calls against the ingest endpoints to fake it.
+analytics boundary** — skip it here rather than pretending. This recipe covers
+`configure`, `getOfferings`, identity, and the two snippets in sub-step 5 (track an
+event, read install attribution). If the user ticked crash reporting or
+performance in Step 2, say plainly that those aren't wired here — do **not**
+hand-roll `fetch` calls against the ingest endpoints to fake them.
 
 **1. Add the dependency (vendor it from the public npm package).**
 
@@ -370,6 +395,28 @@ SwissKnife.getOfferings(
 You can't run the app here — tell the user to build + run in Android Studio (or
 `./gradlew installDebug`) on an emulator/device; the `swiss-knife` log on launch is
 the green light.
+
+**5. Track events and read attribution (optional).** Event names must be ones the
+user wants in analytics (`swiss-knife:event_list` shows what already exists; do
+not invent a taxonomy). `configure` initialises analytics and registers the
+install on the first launch (organic unless a campaign link matched, via the Play
+install referrer); you only read it.
+
+```kotlin
+import com.appswissknife.analytics.SKAnalytics
+import com.appswissknife.attribution.Attribution
+
+// anywhere, after configure
+SKAnalytics.instance.track("paywall_viewed", mapOf("source" to "onboarding"))
+
+// install attribution: null until the first install registration has succeeded
+Attribution.resolved()?.let { Log.i("swiss-knife", "attributed via ${it.method}") }
+```
+
+Verify with `swiss-knife:event_list` (the event appears within a minute of a
+flush) and, for a campaign link test, `swiss-knife:attribution_report` (read the
+attribution skill's testing checklist). Route a deferred deep link once, on first
+open.
 
 ---
 

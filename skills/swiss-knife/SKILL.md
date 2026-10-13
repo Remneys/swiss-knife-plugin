@@ -58,10 +58,18 @@ one. The server has about 200 tools; never guess a name.
 | Products, subscriptions, entitlements, offerings, prices   | `monetization`                                   |
 | Push notifications (APNs / FCM keys, sending)              | `push`                                           |
 | Events, funnels, subscription stats, crashes, error alerts | `observability`                                  |
+| Saved reports, cohorts, boards, anomalies, error merging   | `observability`                                  |
+| Support inbox, replies, teammates, people                  | `support-inbox`                                  |
+| Campaign links, install attribution, deferred deep links   | `attribution`                                    |
+| Onboarding screens and quizzes shown to new users          | `onboarding-funnels`                             |
+| Export-compliance hold on a TestFlight build               | `ship-ios`                                       |
+| Is revenue data arriving, one-time purchases               | `monetization`                                   |
 | Rehearse a release against a simulated store (sandbox)     | `sandbox`                                        |
 | Build on this machine without a worker                     | `swiss-knife:help` with goal `ship_local_build`  |
 | Save store or signing credentials                          | `swiss-knife:help` with goal `setup_credentials` |
 | Anything else                                              | `swiss-knife:help` with `area`                   |
+
+Workspace housekeeping with no skill of its own (tools, read `swiss-knife:help` with `area` for arguments): rotate an app's SDK key with `swiss-knife:app_key_rotate` (the old key stays valid as the previous key until you revoke it, so ship the new key in a build first; `swiss-knife:app_reveal_key` returns the new one), see and cut off connected assistants with `swiss-knife:connection_list` and `swiss-knife:connection_revoke`, change an app's attribution window, subscription transfer behavior or setup step with `swiss-knife:app_update`, and mint a scoped token for CI with `swiss-knife:app_token_mint` (`app_project_ids` up to 50 apps of one workspace; the role is clamped to yours and `roleClamped` says so). Members and invitations are in `support-inbox`. Key rotation, revoking a connection and minting a token change who can reach production data: confirm with the user first.
 
 If two goals are mixed ("set up and ship", "ship and submit"), do them in that
 order, one skill at a time.
