@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",
@@ -104,7 +104,7 @@
         "commerce_description": "Swiss-Knife does not sell products or process payments through ChatGPT. It manages subscription products in the user's own app stores."
       },
       "publication": {
-        "release_notes": "Initial ChatGPT and Codex plugin: 14 skills plus the Swiss-Knife MCP server with account sign-in. 0.4.4: says plainly that ChatGPT and Codex read and explain, and where a store change is made. 0.5.1: new attribution, onboarding-funnels and support-inbox skills; observability, monetization, ship-ios and setup-native cover the new tools (saved reports and cohorts, errors admin, store events health, export compliance, native tracking snippets)."
+        "release_notes": "Initial ChatGPT and Codex plugin: 14 skills plus the Swiss-Knife MCP server with account sign-in. 0.4.4: says plainly that ChatGPT and Codex read and explain, and where a store change is made. 0.5.1: new attribution, onboarding-funnels and support-inbox skills; observability, monetization, ship-ios and setup-native cover the new tools (saved reports and cohorts, errors admin, store events health, export compliance, native tracking snippets). 0.5.2: the observability and monetization skills name only the reads this chat is given."
       }
     }
   }
