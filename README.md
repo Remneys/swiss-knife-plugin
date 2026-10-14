@@ -75,9 +75,10 @@ ZIP archive.
 In ChatGPT and Codex the plugin reads and explains (build and release status,
 what blocks a release, listings, products, revenue and crash reports) and shows
 in-chat cards. It does not change a store, a listing or a product there.
-Starting a build from ChatGPT needs a workspace that allows it and an approval
-code from a workspace admin. Everything else that changes something is done with
-the same account from Claude Code, or in the dashboard.
+The one exception is a build: a workspace member can start or retry one by
+pressing the button on the build card and confirming what the server shows; the
+assistant itself can only propose it. Everything else that changes something is
+done with the same account from Claude Code, or in the dashboard.
 
 ### Any other agent (skills only)
 
