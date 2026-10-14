@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "swiss-knife",
   "displayName": "Swiss-Knife",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Agent skills for Swiss-Knife: connect the MCP server, set up the mobile SDK, and ship iOS builds to TestFlight and Android builds to Play internal testing, with the stores' real pitfalls encoded.",
   "author": {
     "name": "Swiss-Knife",

@@ -72,13 +72,17 @@ Sign in with your Swiss-Knife account when asked. ChatGPT's plugin screens
 change often: if the label differs, look for the option to add a plugin from a
 ZIP archive.
 
-In ChatGPT and Codex the plugin reads and explains (build and release status,
+In ChatGPT the plugin reads and explains (build and release status,
 what blocks a release, listings, products, revenue and crash reports) and shows
 in-chat cards. It does not change a store, a listing or a product there.
 The one exception is a build: a workspace member can start or retry one by
 pressing the button on the build card and confirming what the server shows; the
 assistant itself can only propose it. Everything else that changes something is
 done with the same account from Claude Code, or in the dashboard.
+
+In Codex, as in Claude Code, the assistant calls the write tools itself with
+your account; a store change, a release or a signing change still waits for an
+approval code an admin issues.
 
 ### Any other agent (skills only)
 
