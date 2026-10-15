@@ -18,7 +18,8 @@ not given, say so, relay any `human_action`, and never guess a tool name.
 ## 1. Connect
 
 Check first: call `swiss-knife:workspace_whoami`. If it answers, you are connected;
-skip to step 2.
+check its scopes, then continue below. A successful read proves the connection,
+not that this host exposes the setup tools.
 
 Otherwise connect the server (the user runs this once):
 
@@ -38,6 +39,19 @@ one workspace, a role and read/write scopes. Self-hosted: use your own origin pl
 
 `swiss-knife:workspace_whoami` returns your identity, role and scopes. A
 `read`-scoped token cannot change anything; say so rather than trying.
+
+**In Codex and Claude Code**, configuring builds is part of this plugin: discover
+the exact schemas with `help {tool}` and use `app_create`,
+`build_credentials_save`, `build_repo_connect`, `build_profile_upsert`,
+`build_env_set` and `build_worker_register` as needed. Worker registration needs
+a human approval code; never invent one. Reuse the existing app and signing
+keys when migrating from local fastlane. Continue with `ship-ios` and/or
+`ship-android` for prerequisites, preflight, build and upload verification.
+
+If those tools are missing and `help` reports the ChatGPT surface, this is a
+ChatGPT connector even if the surrounding desktop app is Codex. Report that
+connection mismatch instead of claiming the local plugin is ready for setup.
+Do not change the server's client restrictions or bypass them to continue.
 
 ## 2. Start with `help`
 
