@@ -14,24 +14,28 @@ It bundles two things:
   Swiss-Knife account; the plugin only sees the workspaces and apps that account
   can open.
 
-| Skill            | Use it to                                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------------------------- |
-| `swiss-knife`    | Connect the MCP server, start with `help`, pick a skill, relay human steps and approvals.                 |
-| `setup-sdk`      | Provision a workspace and app and wire the mobile SDK (Expo / React Native).                              |
-| `setup-native`   | The native iOS / Android half of the setup wizard (the SDK sources vendored from the public npm package). |
-| `ship-ios`       | Build an iOS app and put it in TestFlight, checked against App Store Connect.                             |
-| `ship-android`   | Build an Android app and put it on the Play internal track, checked against Google Play.                  |
-| `store-listings` | Edit listing text, translations, screenshots and age rating on both stores, checked against the store.    |
-| `submit-release` | Submit for review, phased rollout and promotion, with human approval codes.                               |
-| `monetization`   | Products, entitlements, offerings and the store catalogue push.                                           |
-| `push`           | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                                 |
-| `observability`  | Events, funnels, subscription and crash stats, error issues and alerts.                                   |
-| `sandbox`        | Rehearse a release against a simulated App Store Connect and Google Play: review, time and faults.        |
+| Skill                | Use it to                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| `swiss-knife`        | Connect the MCP server, start with `help`, pick a skill, relay human steps and approvals.                 |
+| `setup-sdk`          | Provision a workspace and app and wire the mobile SDK (Expo / React Native).                              |
+| `setup-native`       | The native iOS / Android half of the setup wizard (the SDK sources vendored from the public npm package). |
+| `ship-ios`           | Build an iOS app and put it in TestFlight, checked against App Store Connect.                             |
+| `ship-android`       | Build an Android app and put it on the Play internal track, checked against Google Play.                  |
+| `store-listings`     | Edit listing text, translations, screenshots and age rating on both stores, checked against the store.    |
+| `submit-release`     | Submit for review, phased rollout and promotion, with human approval codes.                               |
+| `monetization`       | Products, entitlements, offerings and the store catalogue push.                                           |
+| `push`               | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                                 |
+| `observability`      | Events, funnels, subscription and crash stats, error issues and alerts.                                   |
+| `attribution`        | Campaign links, install attribution, deferred deep links and campaign subscription results.               |
+| `onboarding-funnels` | Create, publish and measure server-driven onboarding screens and quizzes.                                 |
+| `support-inbox`      | Support conversations, replies, internal notes, teammates and triage.                                     |
+| `sandbox`            | Rehearse a release against a simulated App Store Connect and Google Play: review, time and faults.        |
 
-Actions that change a store or spend money (submitting to App Review,
-promoting to production, replacing a signing credential) stop and wait for an
-approval code that you issue yourself. The code is tied to that one action and
-expires after 15 minutes.
+Sensitive actions keep their server-side permission and approval checks. Where
+an approval code is required, a workspace administrator issues it for that exact
+action; it expires after 15 minutes. In ChatGPT, available write controls also
+require the app's review and confirmation flow, and administrator approval and
+workspace opt-in where applicable.
 
 ## Install
 
@@ -64,25 +68,34 @@ plus `/api/mcp`) before launching Claude Code.
 
 ### ChatGPT
 
-Download `swiss-knife-plugin-<version>.zip` from the
-[latest release](https://github.com/Remneys/swiss-knife-plugin/releases/latest)
-and upload it with **Upload plugin archive** in ChatGPT's plugin settings. The
-archive has `plugin.json` at its root and is well under the 100 MB limit.
-Sign in with your Swiss-Knife account when asked. ChatGPT's plugin screens
-change often: if the label differs, look for the option to add a plugin from a
-ZIP archive.
+The [latest release](https://github.com/Remneys/swiss-knife-plugin/releases/latest)
+provides `swiss-knife-plugin-<version>.zip`, with `plugin.json` at its root, for
+plugin testing and submission. Use the installation flow available to your
+account; see OpenAI's [connect and test guide](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+Sign in with your Swiss-Knife account when prompted.
 
-In ChatGPT the plugin reads and explains (build and release status,
-what blocks a release, listings, products, revenue and crash reports) and shows
-in-chat cards. It does not change a store, a listing or a product there.
-The one exception is a build: a workspace member can start or retry one by
-pressing the button on the build card and confirming what the server shows; the
-assistant itself can only propose it. Everything else that changes something is
-done with the same account from Claude Code, or in the dashboard.
+The in-chat app reads build and release status, prerequisites, store data,
+analytics, revenue, errors and performance traces. Its controls also support
+app/repository configuration, build starts and retries, store listings and
+supported release operations, products, and private credential and file uploads.
+For example, Builds > CI accepts signing/store credentials and IPA/AAB files;
+Revenue > Products accepts RevenueCat credentials; Errors > Intake accepts debug
+files. Secret values go directly from the app to Swiss-Knife, outside chat and
+model-visible tool arguments. Never paste them into a conversation.
 
-In Codex, as in Claude Code, the assistant calls the write tools itself with
-your account; a store change, a release or a signing change still waits for an
-approval code an admin issues.
+The assistant can read and propose actions; the app's buttons execute supported
+writes after their required reviews. This is not full parity with every native
+MCP tool. For an action the app does not offer, use a separately connected Codex
+or Claude Code session with the same Swiss-Knife account. Those clients expose
+the native write tools, with the same server-side permissions and approval codes.
+
+### Distribution status
+
+The public repository and GitHub release archives are available for manual
+installation. They do not establish that Swiss-Knife has been approved or
+published in OpenAI's plugin directory. Directory publication is a separate
+[review and publish process](https://developers.openai.com/plugins/deploy/submission);
+this repository does not confirm its status.
 
 ### Any other agent (skills only)
 
