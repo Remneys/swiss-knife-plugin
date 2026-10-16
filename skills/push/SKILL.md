@@ -22,14 +22,14 @@ In ChatGPT, open the in-chat app with `swiss-knife:dashboard_open`,
 reviews the notification there; the preview checks the payload and shows the
 current audience before the admin approves the send. History, delivery counts
 and cancellation are in the same view. The model is not given `push_send` and
-must never try calling it through a hidden tool. Credential setup remains a
-separate step through a connected Codex or Claude Code session.
+must never try calling it through a hidden tool. The person adds APNs or Firebase credentials with the private form in this view;
+replacing a stored key retains the administrator approval step.
 
 Copy and tick:
 
 ```
 - [ ] 1. App found (app_project_id)
-- [ ] 2. Credentials: push_credentials_status shows apns and/or fcm configured
+- [ ] 2. Credentials: in Support > Push, the person uploads their APNs `.p8` or Firebase JSON using the private form. Only metadata enters MCP; replacing a key requires administrator approval. Provider status shows what is saved and verified.
 - [ ] 3. Devices registered: push_device_list has active devices for the audience
 - [ ] 4. Dry run sent, audience and content shown to the user
 - [ ] 5. User confirmed (always for all / marketing / large audiences)
