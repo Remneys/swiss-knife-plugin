@@ -23,7 +23,9 @@ provides simulated-store controls for sandbox apps. The app also accepts push,
 Git and RevenueCat credentials, private build environment values and outgoing
 webhook setup. Its workspace panel offers private receiver addresses, one-time
 webhook signing keys and SDK-key rotation/revoke, retaining administrator
-approval. Never copy these private values into chat or app tool arguments.
+approval. Workspace notifications can also connect or replace Slack through a
+private input, test the hook before saving, and disconnect it after review.
+Never copy these private values into chat or app tool arguments.
 Actions the app does not yet offer use a separately connected Codex or Claude
 Code session. When a step needs a tool you were not given, relay
 any `human_action` and never guess a tool name or call a hidden write.
