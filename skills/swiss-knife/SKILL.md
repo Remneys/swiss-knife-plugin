@@ -10,10 +10,13 @@ gets you connected and pointed at the right skill.
 
 **In ChatGPT** your tool list is short: the read tools, the in-chat cards, and
 `build_start` and `build_retry`. You can look at anything the account can see and
-start or retry a build. Setting things up (a workspace or an app, store or git
-credentials, a repository, uploads, App Review, listings) is done by the user
-outside the chat, for example from Claude Code. When a step needs a tool you were
-not given, say so, relay any `human_action`, and never guess a tool name.
+propose a build. A person can also use the in-chat app's buttons to configure
+apps and repositories, edit listings, manage support and send push notifications
+with the required confirmation and approval. Open it with `dashboard_open`;
+the app's buttons keep their own permissions and are not model tools. Secret
+credential input and actions the app does not offer use a separate connected
+Codex or Claude Code session. When a step needs a tool you were not given, relay
+any `human_action` and never guess a tool name or call a hidden write.
 
 ## 1. Connect
 

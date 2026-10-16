@@ -17,6 +17,14 @@ Success: `swiss-knife:push_message_get` shows the message `completed` with `sent
 
 ## Checklist
 
+In ChatGPT, open the in-chat app with `swiss-knife:dashboard_open`,
+`section: "support"`, `tab: "push"` and the app id. The person composes and
+reviews the notification there; the preview checks the payload and shows the
+current audience before the admin approves the send. History, delivery counts
+and cancellation are in the same view. The model is not given `push_send` and
+must never try calling it through a hidden tool. Credential setup remains a
+separate step through a connected Codex or Claude Code session.
+
 Copy and tick:
 
 ```
