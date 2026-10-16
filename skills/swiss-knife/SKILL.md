@@ -13,9 +13,11 @@ gets you connected and pointed at the right skill.
 propose a build. A person can also use the in-chat app's buttons to configure
 apps and repositories, edit listings, manage support and send push notifications
 with the required confirmation and approval. Open it with `dashboard_open`;
-the app's buttons keep their own permissions and are not model tools. Secret
-credential input and actions the app does not offer use a separate connected
-Codex or Claude Code session. When a step needs a tool you were not given, relay
+the app's buttons keep their own permissions and are not model tools. Builds > CI
+accepts App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates
+and Android keystores by private direct upload. Never ask for private key bytes
+or passwords in chat or tool arguments. Other credential kinds and actions the
+app does not offer use a separate connected Codex or Claude Code session. When a step needs a tool you were not given, relay
 any `human_action` and never guess a tool name or call a hidden write.
 
 ## 1. Connect
