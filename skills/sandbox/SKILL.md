@@ -7,6 +7,8 @@ description: Rehearses a release against a simulated App Store Connect and Googl
 
 Success: the real tools (`swiss-knife:submission_*`, `swiss-knife:listing_push`, ...) ran against a sandbox app, `swiss-knife:sandbox_state` shows the world where you expect it (version in review, rejected, released), and `swiss-knife:sandbox_requests` shows only simulated traffic. Nothing here touches Apple or Google.
 
+- In ChatGPT use `swiss-knife:dashboard_open` with `section: "builds"`, `tab: "sandbox"` and the existing sandbox app id. A person uses its buttons to advance time, decide a simulated review, add or clear faults and reset from a fresh plan. Manage workspace offers sandbox app creation only in an operator-enabled sandbox workspace. The model can inspect state and requests through `swiss-knife:detail_read` with the corresponding sandbox kind; it must not call hidden write tools. The direct tool steps below are for a connected Codex or Claude Code session with the full MCP surface.
+
 ## Rules that never bend
 
 - Sandbox tools work on a sandbox app only. `sandbox_only` (with `details.reason`) means the app is a real one, its workspace is not tagged sandbox, or the server has the sandbox store off. Stop and tell the user; do not try another app of theirs, and never delete a credential to "make it a sandbox".

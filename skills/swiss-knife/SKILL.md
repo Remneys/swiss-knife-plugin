@@ -16,7 +16,10 @@ with the required confirmation and approval. Open it with `dashboard_open`;
 the app's buttons keep their own permissions and are not model tools. Builds > CI
 accepts App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates
 and Android keystores by private direct upload. Never ask for private key bytes
-or passwords in chat or tool arguments. Other credential kinds and actions the
+or passwords in chat or tool arguments. The workspace panel can reveal an SDK
+key or mint a scoped CI token privately; Builds > CI can explicitly register a
+machine a person operates, with the existing human approval. Builds > Sandbox
+provides simulated-store controls for sandbox apps. Other credential kinds and actions the
 app does not offer use a separate connected Codex or Claude Code session. When a step needs a tool you were not given, relay
 any `human_action` and never guess a tool name or call a hidden write.
 
@@ -62,7 +65,7 @@ Do not change the server's client restrictions or bypass them to continue.
 
 Call `swiss-knife:help` with no arguments: it lists the tool areas and the goals
 with the recommended order of calls. With `goal`, `area` or `tool` it narrows to
-one. The server has about 200 tools; never guess a name.
+one. Discover the current tool names rather than guessing.
 
 ## 3. Pick the skill for the goal
 

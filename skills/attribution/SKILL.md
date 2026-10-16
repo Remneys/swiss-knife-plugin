@@ -25,7 +25,7 @@ iOS has no install referrer, so a click on a campaign link matches an iOS instal
 - `swiss-knife:campaign_link_delete` kills the short URLs wherever they were shared or printed. `dry_run` is true unless you send false: show the user the links and clicks that would go, and delete only after a yes. Installs already attributed keep their source.
 - Never sum revenue across currencies, and say that `revenue` is list price of active subscriptions, not cash collected.
 - The window lives on the app: read it with `swiss-knife:app_list` (`attributionWindowDays`), change it with `swiss-knife:app_update` only when the user asks.
-- In ChatGPT only the read exists: `swiss-knife:attribution_report`. Creating or deleting a campaign link is refused there: say it is done from Claude Code, not from this chat.
+- In ChatGPT the model reads `swiss-knife:attribution_report`. Open `swiss-knife:dashboard_open` for the in-chat attribution views and campaign-link controls. A person confirms the app’s offered changes with their permissions and required approval. Do not call hidden writes; relay any `human_action` for an operation the app does not offer.
 - In Codex, as in Claude Code, you call the write tools yourself, including `swiss-knife:build_start` and `swiss-knife:build_retry`, which queue a build at once; a gated write (a store submit, a release, a signing, credential or catalogue change) stops and waits for a human approval code an admin issues, so call `swiss-knife:approval_request`, relay what it says and stop. Never make up a code.
 
 ## Checklist
