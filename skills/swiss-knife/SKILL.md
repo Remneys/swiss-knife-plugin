@@ -19,8 +19,13 @@ and Android keystores by private direct upload. Never ask for private key bytes
 or passwords in chat or tool arguments. The workspace panel can reveal an SDK
 key or mint a scoped CI token privately; Builds > CI can explicitly register a
 machine a person operates, with the existing human approval. Builds > Sandbox
-provides simulated-store controls for sandbox apps. Other credential kinds and actions the
-app does not offer use a separate connected Codex or Claude Code session. When a step needs a tool you were not given, relay
+provides simulated-store controls for sandbox apps. The app also accepts push,
+Git and RevenueCat credentials, private build environment values and outgoing
+webhook setup. Its workspace panel offers private receiver addresses, one-time
+webhook signing keys and SDK-key rotation/revoke, retaining administrator
+approval. Never copy these private values into chat or app tool arguments.
+Actions the app does not yet offer use a separately connected Codex or Claude
+Code session. When a step needs a tool you were not given, relay
 any `human_action` and never guess a tool name or call a hidden write.
 
 ## 1. Connect
