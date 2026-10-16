@@ -53,3 +53,13 @@ One line each; the full table is in references/pitfalls.md (read when any step f
 - `play_upload_key_mismatch` -> the bundle was signed with a different key than Play registered. Stop; human action: save the right keystore, or reset the upload key in Play Console. Never generate a new key for this app.
 - Private repo, clone fails -> `git_token` (fine-grained, read-only Contents).
 - Release in review on Play (`play_release_in_review`) -> wait, or the user chooses `replace_in_review`; that cancels the review, so it needs their say-so.
+
+## Private build environment input
+
+The in-chat app's Builds > CI environment form supports secret/sensitive/plain
+values, UTF-8 text files, app/profile/workspace scope and environment targeting.
+Values go directly to Swiss-Knife after review; do not ask for a secret in chat
+or put it into app tool arguments. Secret edits can keep the existing encrypted
+value. Workspace variables require an unrestricted admin connection.
+`build_env_list` with `include_values:false` returns metadata and versions;
+reviewed native writes may pass `expected_version` to reject competing edits.

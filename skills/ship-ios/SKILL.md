@@ -58,3 +58,13 @@ Copy and tick:
 ## Native SDK note
 
 Native iOS apps that use the Swiss-Knife SDK add it as a local SwiftPM package (`.package(path:)`); it is not published. That is `setup-sdk` territory, not this skill.
+
+## Private build environment input
+
+The in-chat app's Builds > CI environment form supports secret/sensitive/plain
+values, UTF-8 text files, app/profile/workspace scope and environment targeting.
+Values go directly to Swiss-Knife after review; do not ask for a secret in chat
+or put it into app tool arguments. Secret edits can keep the existing encrypted
+value. Workspace variables require an unrestricted admin connection.
+`build_env_list` with `include_values:false` returns metadata and versions;
+reviewed native writes may pass `expected_version` to reject competing edits.
