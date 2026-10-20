@@ -10,15 +10,19 @@ Success: `swiss-knife:testflight_overview` lists the new build as processed. Our
 ## Local iPhone development
 
 For local changes and native debugging on an iPhone, use `swiss-build dev ios`.
-Check `swiss-build dev ios --help` first: older binaries lack this command and
-swiss-build is not on npm. Report a missing CLI capability rather than inventing
-an npm installation command.
+Prepare the local executor yourself with
+[local-executor.md](references/local-executor.md): it downloads the pinned
+release, checks its SHA-256 and returns an absolute executable path. Use that
+path for subsequent commands, even when `swiss-build` is absent from `PATH`.
+The user does not need to install a CLI, Bun or npm package manually.
+Remote worker builds use MCP and do not need this local executor.
 
 ```sh
 swiss-build --json dev ios --project Example.xcodeproj --scheme Example --device DEVICE_UDID
 ```
 
-Substitute actual project, scheme and device values. A human terminal can omit
+Replace `swiss-build` with the verified absolute path and substitute actual
+project, scheme and device values. A human terminal can omit
 them and select interactively. `--dry-run` inspects without creating keys or
 building. Full Xcode tools must be installed and the phone paired, trusted and
 in Developer Mode. An Apple portal login on the developer's Mac is not required.
@@ -29,6 +33,11 @@ browser. Never approve that form yourself or copy a session cookie. The printed
 key fingerprint is not an approval token. The app needs existing Apple App IDs,
 extension capabilities, a valid App Store Connect team key and signing writes
 enabled by its owner. After human confirmation, rerun the identical command.
+When the developer is a workspace member, do not ask their connection to enable
+signing writes: that operation requires an administrator. Pass the app name and
+the returned refusal or approval request to the administrator; do not invent an
+approval URL. Local executor installation and a `--dry-run` remain independent
+of this permission, so complete them before handing off the signing blocker.
 
 The CLI reuses an existing Apple Development identity when unambiguous, or
 creates a key in macOS Keychain. `--identity SHA1` selects an existing identity.
