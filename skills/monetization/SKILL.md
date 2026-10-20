@@ -5,6 +5,8 @@ description: Sets up an app's products, entitlements, offerings (the paywall the
 
 # Set up monetization and push it to the store
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Success: the store itself lists the product with the intended price (`swiss-knife:catalog_sync_now`, then `swiss-knife:catalog_list`), and `swiss-knife:offering_get` shows the current offering with its packages. Our own push status is not proof.
 
 Two layers, do not mix them up:
@@ -18,14 +20,14 @@ An offering is the paywall. Its `template_id` and `config` are the only paywall 
 
 ## Rules that never bend
 
-- Any tool answer with `human_action` (or a refusal that needs an approval): relay `who`, `what`, `url`, `why` to the user verbatim, then STOP. No retry, no polling, no workaround. When they say it is done, call the `verify_with` tool.
-- Approval codes come from a signed-in human via `swiss-knife:approval_request`; never invent, guess or reuse one. Call it with the gated tool and your arguments, relay what it says, wait for the code, send the same call again with it as `approval`.
+- If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
+- On restricted connections only, approval codes come from a signed-in human via `swiss-knife:approval_request`; never invent, guess or reuse one. Call it with the gated tool and your arguments, relay what it says, wait for the code, send the same call again with it as `approval`.
 - `swiss-knife:catalog_push_preview` before every `swiss-knife:catalog_push`; pass its `fingerprint` as `rehearsed`. Change anything after the preview and you preview again.
 - Never push a price you have not matched to a store price point (Step 5). A price is an integer in USD micros: `4_990_000` is $4.99.
-- Never turn `swiss-knife:catalog_push_set` on without a human's approval code. Never use `activate` or `submit_for_review` unless the user asked for that.
+- Enable `swiss-knife:catalog_push_set` through MCP when the user authorized store setup and the connection has admin access. Never use `activate` or `submit_for_review` unless the user asked for that.
 - `swiss-knife:offering_create` is not idempotent. List first.
 - In ChatGPT the model reads with `swiss-knife:entitlement_list`, `swiss-knife:offering_list`, `swiss-knife:offering_get` and `swiss-knife:store_events_health`. Open `swiss-knife:dashboard_open` for the in-chat catalogue, offerings, packages and available ledger views. A person uses the app’s offered controls with their permissions and required approval; a model cannot call hidden write tools. For an operation the app does not offer, relay its `human_action` and use a separate connected Codex or Claude Code session.
-- In Codex, as in Claude Code, you call the write tools yourself, including `swiss-knife:build_start` and `swiss-knife:build_retry`, which queue a build at once; a gated write (a store submit, a release, a signing, credential or catalogue change) stops and waits for a human approval code an admin issues, so call `swiss-knife:approval_request`, relay what it says and stop. Never make up a code.
+- In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
 
@@ -51,7 +53,7 @@ An offering is the paywall. Its `template_id` and `config` are the only paywall 
 5. **Read the catalogue.** `swiss-knife:catalog_list`. Stale `lastSyncedAt`: `swiss-knife:catalog_sync_now` (answers STARTED; a second call within a minute is `conflict`), then read again. Save the draft with `swiss-knife:catalog_product_save` (`base_price_usd_micros`, `localizations`) and read its `rejected` array: locked fields are refused by name, the remedy is a new product.
 6. **Check the price.** `swiss-knife:catalog_price_points` with `parent_external_id` from `swiss-knife:catalog_list` (`apple.subscriptionExternalId` or `apple.iapExternalId`) shows the bands already resolved. Empty, or no band at the price: `swiss-knife:catalog_price_preview` shows what the amount snaps to in every territory. If the snap differs from what the user asked for, tell them the real price and ask; do not push the original.
 7. **Rehearse.** `swiss-knife:catalog_push_preview` with the same `activate` / `submit_for_review` you intend. Read `refusals`, `readiness.blockers`, `summary.requestCount` (an Apple subscription price is about 175 requests) and `disarmed`. A plan with `blocked: true` or `readiness.canPush: false` is not pushed.
-8. **Push.** `disarmed: true` means pushes are off: `swiss-knife:approval_request` for `swiss-knife:catalog_push_set`, wait for the code, send it. Then `swiss-knife:approval_request` for `swiss-knife:catalog_push` (the code is bound to this exact plan), and send `swiss-knife:catalog_push` with `rehearsed` and `approval`. The answer means queued, not done.
+8. **Push.** If `disarmed: true`, enable `swiss-knife:catalog_push_set` when the user authorized store setup. Call `swiss-knife:catalog_push` with the preview's `rehearsed` fingerprint. Codex and Claude Code omit `approval`; only a restricted connection's actual refusal uses `swiss-knife:approval_request`. The answer means queued, not done.
 9. **Follow it.** `swiss-knife:catalog_push_status` with the `push_id` until every step is done; for a failed step read references/pitfalls.md. Before sending a product to App Review, `swiss-knife:catalog_submission_plan`.
 10. **Verify.** `swiss-knife:catalog_sync_now`, wait, `swiss-knife:catalog_list`: the store's own version shows the product, its state and the price per territory. If it does not, say so; never report success from the push status.
 11. **Is revenue data arriving?** `swiss-knife:store_events_health` (`view` health by default) shows whether Apple server notifications, Google RTDN and RevenueCat webhooks are connected, when the last one arrived, failures in the last 7 days, the URL a person pastes into App Store Connect or Pub/Sub, and the Sales and Trends ingestion state. Page the inbound event log with its `status`, `platform` or `app_user_id` filters when a purchase did not show up. One-time purchases and consumables are in `swiss-knife:store_transaction_list` (`include_balances` adds consumable balances; refunded rows are out of revenue). A webhook that is not connected is a `human_action` for the user to paste a URL: relay it, do not call it fixed.

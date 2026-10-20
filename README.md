@@ -22,7 +22,7 @@ It bundles two things:
 | `ship-ios`           | Build an iOS app and put it in TestFlight, checked against App Store Connect.                             |
 | `ship-android`       | Build an Android app and put it on the Play internal track, checked against Google Play.                  |
 | `store-listings`     | Edit listing text, translations, screenshots and age rating on both stores, checked against the store.    |
-| `submit-release`     | Submit for review, phased rollout and promotion, with human approval codes.                               |
+| `submit-release`     | Submit for review, phased rollout and promotion, using connected write permissions.                       |
 | `monetization`       | Products, entitlements, offerings and the store catalogue push.                                           |
 | `push`               | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                                 |
 | `observability`      | Events, funnels, subscription and crash stats, error issues and alerts.                                   |
@@ -32,7 +32,7 @@ It bundles two things:
 | `sandbox`            | Rehearse a release against a simulated App Store Connect and Google Play: review, time and faults.        |
 
 Sensitive actions keep their server-side permission and approval checks. Where
-an approval code is required, a workspace administrator issues it for that exact
+a restricted connection requires an approval code, a workspace administrator issues it for that exact
 action; it expires after 15 minutes. In ChatGPT, available write controls also
 require the app's review and confirmation flow, and administrator approval and
 workspace opt-in where applicable.
@@ -87,7 +87,7 @@ The assistant can read and propose actions; the app's buttons execute supported
 writes after their required reviews. This is not full parity with every native
 MCP tool. For an action the app does not offer, use a separately connected Codex
 or Claude Code session with the same Swiss-Knife account. Those clients expose
-the native write tools, with the same server-side permissions and approval codes.
+the native write tools using their connected permissions, without copying dashboard approval codes.
 
 ### Distribution status
 

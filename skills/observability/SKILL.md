@@ -5,17 +5,19 @@ description: Answers analytics questions and manages crashes and alerts for an a
 
 # Read analytics, triage errors, manage alerts
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Success: every number or state you report was read from a swiss-knife tool in this conversation, using event and property names that `swiss-knife:event_list` / `swiss-knife:property_list` returned, and every write (triage, alert) was re-read afterwards and matches what the user asked for.
 
 ## Rules that never bend
 
-- Any tool answer with `human_action` (or a refusal that needs an approval): relay `who`, `what`, `url`, `why` to the user verbatim, then STOP. No retry, no polling, no workaround. When they say it is done, call the `verify_with` tool.
-- Approval codes come from a signed-in human. If a call is refused for an approval, call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
+- If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
+- On restricted connections only, approval codes come from a signed-in human. If a call is refused for an approval, call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
 - Never guess an event or property name. Call `swiss-knife:event_list` (and `swiss-knife:property_list` for properties) BEFORE `swiss-knife:funnel_report`, `swiss-knife:report_run` or `swiss-knife:retention_report`. A name that does not exist does not error: it returns zeros, and a zero funnel is a wrong answer, not a finding.
 - `swiss-knife:error_alert_create` is not idempotent: `swiss-knife:error_alert_list` first, then at most one create. A repeated create makes a second rule.
 - Never invent a `notifyEmail`. Use the `email` from `swiss-knife:workspace_whoami` or one the user gave in this conversation; otherwise omit it and say the rule has no recipient yet.
 - In ChatGPT the model reads `swiss-knife:error_stats`, `swiss-knife:error_issue_list`, `swiss-knife:error_issue_detail`, `swiss-knife:error_alert_list`, `swiss-knife:saved_report_list`, `swiss-knife:cohort_list`, `swiss-knife:board_get`, `swiss-knife:anomaly_list` and `swiss-knife:notification_list`. Open `swiss-knife:dashboard_open` for the in-chat issue triage, reports, cohorts, boards and available settings controls. `swiss-knife:error_issue_update`, `swiss-knife:error_issue_archive`, `swiss-knife:error_issue_merge`, `swiss-knife:error_alert_create`, `swiss-knife:saved_report_save`, `swiss-knife:cohort_save` and `swiss-knife:board_save` are not model tools here: a person uses the app’s buttons with confirmation and required approval. For an operation not offered, relay its `human_action` and use a separate full MCP connection.
-- In Codex, as in Claude Code, you call the write tools yourself, including `swiss-knife:build_start` and `swiss-knife:build_retry`, which queue a build at once; a gated write (a store submit, a release, a signing, credential or catalogue change) stops and waits for a human approval code an admin issues, so call `swiss-knife:approval_request`, relay what it says and stop. Never make up a code.
+- In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
 

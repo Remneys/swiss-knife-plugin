@@ -5,6 +5,8 @@ description: Rehearses a release against a simulated App Store Connect and Googl
 
 # Rehearse a release in the sandbox
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Success: the real tools (`swiss-knife:submission_*`, `swiss-knife:listing_push`, ...) ran against a sandbox app, `swiss-knife:sandbox_state` shows the world where you expect it (version in review, rejected, released), and `swiss-knife:sandbox_requests` shows only simulated traffic. Nothing here touches Apple or Google.
 
 - In ChatGPT use `swiss-knife:dashboard_open` with `section: "builds"`, `tab: "sandbox"` and the existing sandbox app id. A person uses its buttons to advance time, decide a simulated review, add or clear faults and reset from a fresh plan. Manage workspace offers sandbox app creation only in an operator-enabled sandbox workspace. The model can inspect state and requests through `swiss-knife:detail_read` with the corresponding sandbox kind; it must not call hidden write tools. The direct tool steps below are for a connected Codex or Claude Code session with the full MCP surface.
@@ -12,7 +14,7 @@ Success: the real tools (`swiss-knife:submission_*`, `swiss-knife:listing_push`,
 ## Rules that never bend
 
 - Sandbox tools work on a sandbox app only. `sandbox_only` (with `details.reason`) means the app is a real one, its workspace is not tagged sandbox, or the server has the sandbox store off. Stop and tell the user; do not try another app of theirs, and never delete a credential to "make it a sandbox".
-- The real tools keep their human approval codes on a sandbox app. Get codes the usual way (`swiss-knife:approval_request`, relay, wait). The sandbox controls are not a way around a gate: `swiss-knife:sandbox_review_decide` decides only what was submitted.
+- Sandbox tools use the same connected permissions as real apps. Native write-scoped connections need no copied codes. The sandbox controls are not a way around a gate: `swiss-knife:sandbox_review_decide` decides only what was submitted.
 - Any answer with `human_action`: relay `who`, `what`, `url`, `why` verbatim, then STOP.
 - Tagging a workspace as sandbox is a super admin's act; you cannot do it. If `swiss-knife:sandbox_app_create` answers `sandbox_only` with `workspace_not_sandbox`, say so and stop.
 
@@ -31,7 +33,7 @@ Success: the real tools (`swiss-knife:submission_*`, `swiss-knife:listing_push`,
 
 1. **App.** `swiss-knife:sandbox_app_create` with a `client_key` (lowercase, digits, underscores). Repeating the call returns the same app. `platform` `ios`, `android` or `both`; `with_catalogue: true` seeds a subscription. Its bundle id is `app.swissknife.sandbox.<client_key>`. For an existing sandbox app, find it with `swiss-knife:app_list`.
 2. **Look.** `swiss-knife:sandbox_state` (add `platform` when the app has both). A look changes nothing.
-3. **Run the flow with the real tools.** `swiss-knife:submission_prepare`, `swiss-knife:submission_attach_build`, then `swiss-knife:submission_submit` with the approval code a person issues. The simulated store answers as the real one would.
+3. **Run the flow with the real tools.** `swiss-knife:submission_prepare`, `swiss-knife:submission_attach_build`, then `swiss-knife:submission_submit` with `dry_run: false` when authorized; native connections omit `approval`. The simulated store answers as the real one would.
 4. **Let the store act.** `swiss-knife:sandbox_advance_time` with `by` like `31m` or `2d` (give a `client_key` so a retry advances once): builds finish processing, a waiting review enters review, Google's wait ends. Then `swiss-knife:sandbox_review_decide`: `approve`, or `reject` with a `reason` from `rejection_reasons`, and read the failure the real tools then show; references/rejections.md lists what to try.
 5. **Break it on purpose.** `swiss-knife:sandbox_inject_fault` with `action: "add"`: a `route` (an App Store Connect operation id) or `path`, `times` (required, at most 20), and one effect: a catalogue `reason`, a bare `status`, or a transport `reset`. Faults expire (`ttl`, default one hour of the world's time). `action: "list"` shows `fired` and `remaining`; `action: "clear"` removes them.
 6. **Verify.** `swiss-knife:sandbox_requests` (add `failed_only`) shows each request and the status the world answered, injected faults included. `swiss-knife:sandbox_state` shows the result.

@@ -5,6 +5,8 @@ description: Takes an iOS app from a connected repo to a processed build in Test
 
 # Ship an iOS build to TestFlight
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Success: `swiss-knife:testflight_overview` lists the new build as processed. Our own build status is not proof; Apple's answer is.
 
 ## Local iPhone development
@@ -51,13 +53,13 @@ plugins and macros without opening Xcode; inspect the dependencies before opting
 
 ## Rules that never bend
 
-- Any tool answer with `human_action` (or a refusal that needs an approval): relay `who`, `what`, `url`, `why` to the user verbatim, then STOP. No retry, no polling, no workaround. When they say it is done, call the `verify_with` tool.
-- Approval codes come from a signed-in human. Call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
+- If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
+- On restricted connections only, approval codes come from a signed-in human. Call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
 - Never revoke or delete a certificate, profile or credential yourself.
 - Always `swiss-knife:ship_prerequisites` and `swiss-knife:build_preflight` before `swiss-knife:build_start`.
 - Do not tell anyone to `npm install` swiss-build: it is not on npm. Its config is a plain object (see Step 3).
 - In ChatGPT your model tools read status and propose builds. Use `swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get` and `swiss-knife:testflight_overview` for status; `swiss-knife:build_start` and `swiss-knife:build_retry` only propose a build here. A person confirms a build in its card. The in-chat app also provides repository configuration and credential upload under Builds > CI, with current permissions and required approval. App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates and Android keystores travel directly from that form to Swiss-Knife, never through chat or tool arguments. For an IPA or AAB already built elsewhere, the person can use Builds > CI > Upload a built app, then review registration after the private upload. Registration verifies the actual binary; store upload remains a separate action. Open the app with `swiss-knife:dashboard_open`. Never ask for private key bytes or passwords in chat. For an operation the app does not offer, relay its `human_action`; use a separate connected Codex or Claude Code session for a missing write tool. Never call a hidden tool.
-- In Codex, as in Claude Code, you call the write tools yourself, including `swiss-knife:build_start` and `swiss-knife:build_retry`, which queue a build at once; a gated write (a store submit, a release, a signing, credential or catalogue change) stops and waits for a human approval code an admin issues, so call `swiss-knife:approval_request`, relay what it says and stop. Never make up a code.
+- In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
 
@@ -83,7 +85,7 @@ Copy and tick:
 5. **Preflight.** `swiss-knife:build_preflight` with platform `ios`. Fix each `blocking` issue, re-run. Note the `version` it reports: that is what the build will be filed under.
 6. **Build.** `swiss-knife:build_start` with platform `ios` (pass `version` on the first build of an app; the build number is assigned for you). Keep `ids.jobId`. Poll `swiss-knife:build_get` with it until `succeeded` or `failed`; on `failed` read `swiss-knife:build_logs`, then the table in references/pitfalls.md. `swiss-knife:build_start` is not idempotent: before calling it again check `swiss-knife:release_list`, or pass `cancel_previous: true`. After a failure use `swiss-knife:build_retry`, which takes a fresh build number.
 7. **Upload.** `swiss-knife:submission_upload_build` with the `release_id` (platform defaults to ios; TestFlight only, it cannot reach review). Then `swiss-knife:submission_upload_status` until `uploaded`. `blocked` carries a `human_action`: relay and stop. `failed` carries `failureReason`: see references/pitfalls.md.
-8. **Export compliance.** A build Apple holds at `MISSING_EXPORT_COMPLIANCE` reaches no tester. `swiss-knife:preflight_platform_requirements` (`release_id`) lists it under `exportCompliance.builds[]` with `waiting: true` and a `buildExternalId`. Ask the user whether the app uses only encryption Apple exempts (HTTPS/TLS through the operating system); never answer on your own to get a build moving. Then `swiss-knife:testflight_export_compliance_answer` with `dry_run` (the default): it sends nothing and returns the verdict, the exact `confirmation` phrase and the approval handshake. After the user's yes, `swiss-knife:approval_request`, relay, wait for the code, and send the real call (`dry_run: false`, that `confirmation`, `approval`). It is a legal declaration under US export rules; if the binary declares non-exempt encryption it is refused and a person answers in App Store Connect with the export documentation.
+8. **Export compliance.** A build Apple holds at `MISSING_EXPORT_COMPLIANCE` reaches no tester. `swiss-knife:preflight_platform_requirements` (`release_id`) lists it under `exportCompliance.builds[]` with `waiting: true` and a `buildExternalId`. Ask the user whether the app uses only encryption Apple exempts (HTTPS/TLS through the operating system); never answer on your own to get a build moving. Then `swiss-knife:testflight_export_compliance_answer` with `dry_run` (the default): it sends nothing and returns the verdict, the exact `confirmation` phrase and the approval handshake. After the user's yes, send the real call (`dry_run: false`, that `confirmation`); Codex and Claude Code omit `approval`. Only a restricted connection that actually requires a code uses `swiss-knife:approval_request`. It is a legal declaration under US export rules; if the binary declares non-exempt encryption it is refused and a person answers in App Store Connect with the export documentation.
 9. **Verify.** `swiss-knife:testflight_overview`: the build must be listed. If it is not, say so; do not report success from the build status.
 
 ## When it breaks
@@ -94,7 +96,7 @@ Copy and tick:
 - `ASC_CERT_LIMIT` -> stop; offer the human a .p12 upload or a portal revoke of their choice (and, if they own a second workspace on the team that holds a certificate, a team certificate link: references/pitfalls.md). Never call `swiss-knife:signing_action` with `revoke_certificate`.
 - Private repo, clone fails -> `git_token` (fine-grained, read-only Contents).
 - App record missing in App Store Connect -> `human_action` from `swiss-knife:ship_prerequisites`; relay and stop.
-- Need to look inside the build VM over SSH -> never put `debug` on the build trigger (the trigger route refuses it, `debug_requires_approval`). Start the build first, then `swiss-knife:approval_request` with tool `build_debug_request` and that `job_id`, relay the card, and send `swiss-knife:build_debug_request` with the admin's code as `approval`.
+- Need to look inside the build VM over SSH -> never put `debug` on the build trigger (the trigger route refuses it, `debug_requires_approval`). Start the build first, then call `swiss-knife:build_debug_request` for that `job_id` and the requested public key and hold policy. Native admin connections omit `approval`; restricted connections use the returned human step.
 - Duplicate build number -> `swiss-knife:build_retry` or a new `swiss-knife:build_start`; the number is assigned for you.
 
 ## Native SDK note

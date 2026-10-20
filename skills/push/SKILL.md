@@ -5,15 +5,17 @@ description: Sends push notifications to an app's users directly through APNs an
 
 # Send push notifications
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Success: `swiss-knife:push_message_get` shows the message `completed` with `sent` above zero and no `error`, and `swiss-knife:push_device_list` shows the target devices `active`. A `message_id` alone is not proof; delivery counts are.
 
 ## Rules that never bend
 
-- Any tool answer with `human_action` (or a refusal that needs an approval): relay `who`, `what`, `url`, `why` to the user verbatim, then STOP. No retry, no polling, no workaround. When they say it is done, call the `verify_with` tool.
-- Approval codes come from a signed-in human. Call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
+- If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
+- On restricted connections only, approval codes come from a signed-in human. Call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
 - Always `swiss-knife:push_send` with `dry_run: true` first, then show the user the audience (`targeted_devices`, `devices_by_platform`) and the exact content. A push is not recallable once delivered.
 - `swiss-knife:push_send` is not approval-gated, so the confirmation is yours: for `target: {"all": true}`, any `kind: "marketing"` send, or more than a handful of devices, get an explicit yes from the user before the real send. Never widen the target (from `target.user_ids` to `all`) without asking.
-- Never invent a key. The APNs `.p8` is issued by a human in the Apple Developer portal (the App Store Connect API cannot create one). Never replace a stored credential without an approval code.
+- Never invent a key. The APNs `.p8` is issued by a human in the Apple Developer portal (the App Store Connect API cannot create one). Replace a stored credential only when the user authorized replacement; request a code only if the connection requires it.
 
 ## Checklist
 

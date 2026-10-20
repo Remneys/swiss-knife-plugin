@@ -5,6 +5,8 @@ description: Entry point for the Swiss-Knife MCP server, which runs mobile build
 
 # Swiss-Knife
 
+**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
+
 Swiss-Knife is an MCP server. Everything it does is a tool call; this skill only
 gets you connected and pointed at the right skill.
 
@@ -60,8 +62,7 @@ one workspace, a role and read/write scopes. Self-hosted: use your own origin pl
 **In Codex and Claude Code**, configuring builds is part of this plugin: discover
 the exact schemas with `help {tool}` and use `app_create`,
 `build_credentials_save`, `build_repo_connect`, `build_profile_upsert`,
-`build_env_set` and `build_worker_register` as needed. Worker registration needs
-a human approval code; never invent one. Reuse the existing app and signing
+`build_env_set` and `build_worker_register` as needed. Worker registration uses the connected admin permissions; no copied code is needed in Codex or Claude Code. Reuse the existing app and signing
 keys when migrating from local fastlane. Continue with `ship-ios` and/or
 `ship-android` for prerequisites, preflight, build and upload verification.
 
@@ -119,19 +120,11 @@ returns `error.details.human_action`, or a `human_action` field beside a result:
 
 A `human_action` means only a person can clear it, whatever `error.code` says.
 
-## 5. Approval codes
+## 5. Authorization
 
-Calls that reach App Review, real users, testers, a store catalogue, Apple signing
-objects, or that delete a stored credential need an `approval` code issued by a
-signed-in human. You never issue or invent one.
+Codex and Claude Code use the write access granted at connection time. The server checks current workspace membership, token role and allowed apps on every call. Carry out the user's request with the appropriate tools and verify the result. Omit `approval` on direct calls. Do not ask for another yes when the user already authorized the operation.
 
-1. Call `swiss-knife:approval_request` with the gated tool's name and the arguments
-   you intend to use. It is read-only and returns what the human would approve, the
-   exact page, and the call to make with the code.
-2. Relay that to the user and stop.
-3. When they give you the code, send the SAME call again with it as `approval`.
-
-A code is bound to the exact action; if the arguments change, ask again.
+Use `approval_request` only to inspect a restricted connection's actual approval refusal. When `approval_required` is false, call the action directly. If it is true, relay the returned human step; never invent a code, session or permission. A supplied code is still verified even on a delegated connection.
 
 ## Rules
 
