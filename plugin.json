@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.8.16",
+  "version": "0.8.17",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",

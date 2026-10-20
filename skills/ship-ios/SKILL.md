@@ -7,6 +7,39 @@ description: Takes an iOS app from a connected repo to a processed build in Test
 
 Success: `swiss-knife:testflight_overview` lists the new build as processed. Our own build status is not proof; Apple's answer is.
 
+## Local iPhone development
+
+For local changes and native debugging on an iPhone, use `swiss-build dev ios`.
+Check `swiss-build dev ios --help` first: older binaries lack this command and
+swiss-build is not on npm. Report a missing CLI capability rather than inventing
+an npm installation command.
+
+```sh
+swiss-build --json dev ios --project Example.xcodeproj --scheme Example --device DEVICE_UDID
+```
+
+Substitute actual project, scheme and device values. A human terminal can omit
+them and select interactively. `--dry-run` inspects without creating keys or
+building. Full Xcode tools must be installed and the phone paired, trusted and
+in Developer Mode. An Apple portal login on the developer's Mac is not required.
+
+The first run returns `human_action` and exits 2. Relay its URL and key code.
+An app administrator confirms the exact key and phone in their signed-in
+browser. Never approve that form yourself or copy a session cookie. The printed
+key fingerprint is not an approval token. The app needs existing Apple App IDs,
+extension capabilities, a valid App Store Connect team key and signing writes
+enabled by its owner. After human confirmation, rerun the identical command.
+
+The CLI reuses an existing Apple Development identity when unambiguous, or
+creates a key in macOS Keychain. `--identity SHA1` selects an existing identity.
+Private keys remain in the developer's Keychain. Profiles for the app and every extension
+are validated before building Debug, installing and launching. Later builds
+reuse valid signing material. In a human terminal, `--console` attaches logs
+and `--debug` starts LLDB. `--no-install` only builds. A successful build is
+not proof of installation: require `installed` or `launched` and device evidence.
+For trusted project dependencies, `--trust-package-plugins` permits Swift package
+plugins and macros without opening Xcode; inspect the dependencies before opting in.
+
 ## Rules that never bend
 
 - Any tool answer with `human_action` (or a refusal that needs an approval): relay `who`, `what`, `url`, `why` to the user verbatim, then STOP. No retry, no polling, no workaround. When they say it is done, call the `verify_with` tool.
