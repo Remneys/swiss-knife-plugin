@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.8.21",
+  "version": "0.8.22",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",
@@ -107,7 +107,7 @@
         "commerce_description": "Swiss-Knife does not sell products or process payments through ChatGPT. It manages subscription products in the user's own app stores."
       },
       "publication": {
-        "release_notes": "0.8.21: ChatGPT actions use one in-card preview and confirmation without copied dashboard codes. Codex and Claude Code can discover and invoke native tools omitted from the compact list, and members can prepare local iPhone development signing through the plugin when app signing is configured. Updated skills preserve current roles, app access, store checks and factual declarations while removing redundant authorization steps."
+        "release_notes": "0.8.22: Local iPhone development signing uses an updated, checksum-verified executor that reads both PEM and hex-encoded macOS Keychain entries. Existing private keys and pending signing requests are preserved when upgrading. Connected workflows and in-card confirmations from 0.8.21 remain available."
       }
     }
   }
