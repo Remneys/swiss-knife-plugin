@@ -15,7 +15,7 @@ Success: the real tools (`swiss-knife:submission_*`, `swiss-knife:listing_push`,
 
 - Sandbox tools work on a sandbox app only. `sandbox_only` (with `details.reason`) means the app is a real one, its workspace is not tagged sandbox, or the server has the sandbox store off. Stop and tell the user; do not try another app of theirs, and never delete a credential to "make it a sandbox".
 - Sandbox tools use the same connected permissions as real apps. Native write-scoped connections need no copied codes. The sandbox controls are not a way around a gate: `swiss-knife:sandbox_review_decide` decides only what was submitted.
-- Any answer with `human_action`: relay `who`, `what`, `url`, `why` verbatim, then STOP.
+- If a real prerequisite is returned in `human_action`, relay it and pause only dependent work. An informational response with `approval_required:false` does not block progress.
 - Tagging a workspace as sandbox is a super admin's act; you cannot do it. If `swiss-knife:sandbox_app_create` answers `sandbox_only` with `workspace_not_sandbox`, say so and stop.
 
 ## Checklist

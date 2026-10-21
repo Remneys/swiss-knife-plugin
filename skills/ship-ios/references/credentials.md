@@ -1,5 +1,3 @@
-**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
-
 # iOS credentials
 
 Read when a credential is missing, invalid, or the repo is private.
@@ -9,11 +7,11 @@ Read when a credential is missing, invalid, or the repo is private.
 - App Store Connect API key
 - Git token for a private repo
 - Distribution certificate (.p12)
-- Approval handshake
+- Replacing credentials
 
 ## App Store Connect API key
 
-Needed for managed signing and upload. Ask the user for the issuer id, key id and the .p8 contents (Apple lets it be downloaded once). The key must belong to the team that owns the app. Creating the key is a human step in App Store Connect; if the user has none, tell them so and stop.
+Needed for managed signing and upload. Read the issuer id, key id and .p8 from a user-provided local file in Codex/Claude Code, or the private credential form in ChatGPT. Do not ask for private-key bytes in chat. The key must belong to the team that owns the app. Creating the key is a human step in App Store Connect; if the user has none, explain that prerequisite and pause only work that needs the key.
 
 ```
 swiss-knife:build_credentials_save
@@ -21,11 +19,11 @@ swiss-knife:build_credentials_save
   payload: { issuerId, keyId, p8 }
 ```
 
-The answer carries `validation` (`valid`, `limited`, `invalid`). Always read it. `swiss-knife:build_credentials_validate` re-checks later. Saving the first one needs nothing more. Overwriting a stored one loses it, so it needs an approval code: see below.
+The answer carries `validation` (`valid`, `limited`, `invalid`). Always read it. `swiss-knife:build_credentials_validate` re-checks later. Saving the first one needs nothing more. Replace a stored key only when the user requested replacement; native write connections omit approval. Restricted legacy connections use the handshake below.
 
 ## Git token for a private repo
 
-The Swiss-Knife GitHub App is private, so a private repository is not readable through it. Use a fine-grained personal access token with read-only Contents on that one repository (GitLab: `read_repository`; classic GitHub: `repo`). Ask the user to create it.
+First inspect build_repo_status and retain an existing GitHub App installation that can read the repository. Private repositories work when included in that installation. Use a fine-grained token with read-only Contents for that repository only as a fallback when app access cannot be configured (GitLab: read_repository). Never request a second credential when the existing connection works.
 
 ```
 swiss-knife:build_credentials_save
@@ -46,6 +44,8 @@ swiss-knife:build_credentials_save
 
 Then re-run `swiss-knife:ship_prerequisites`. The team's other apps reuse it.
 
-## Approval handshake
+## Replacing credentials
 
-Replacing a stored credential is refused without a code. Call `swiss-knife:approval_request` with `tool: "build_credentials_save"` and the arguments you mean to use. It says what the human approves, the page to open and the call to make. Relay that verbatim and stop. When the user gives you the code, repeat the same save with `approval` set to it. Do not invent, guess or reuse a code.
+Read existing metadata first and retain a working credential unless the user requested replacement. An authenticated native connection with the required write scope and role can save the requested replacement directly, omitting `approval`. Read its validation result afterwards. Private bytes come from a user-provided local file or the private upload form, never chat.
+
+Only if the server actually returns an approval refusal on a restricted legacy connection, call `swiss-knife:approval_request` for the same operation and relay its human step. Never invent or reuse a code. A missing role or scope needs the appropriate access, not an approval code.

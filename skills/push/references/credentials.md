@@ -1,12 +1,10 @@
-**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
-
 # Push credentials
 
 Read when `swiss-knife:push_credentials_status` shows a provider not configured, or a send fails on credentials.
 
 ## APNs (iOS)
 
-A human creates the key; no tool can. No tool answer carries a `human_action` for it, so tell the user yourself and STOP until they have the file:
+A human creates the key; no tool can. No tool answer carries a `human_action` for it, so explain this prerequisite and pause only work that needs the key:
 
 1. Apple Developer portal, Certificates, Identifiers & Profiles, Keys, +. Name it, tick Apple Push Notifications service (APNs), register.
 2. Download the `.p8` (Apple shows it once). Note the Key ID (10 characters) and the Team ID (10 characters).
@@ -20,9 +18,8 @@ Firebase console, Project settings, Service accounts, Generate new private key. 
 
 ## Replacing a key
 
-The first key of a kind is free. Replacing a stored one is irreversible (a `.p8` cannot be downloaded again), so the save is refused until a human approves it:
+Replacing a stored key changes which credential Swiss-Knife uses. Apple does not let you download a `.p8` again, so preserve the existing local key unless the user asked to replace it.
 
-1. `swiss-knife:approval_request` with `tool: "push_credentials_set"`, `app_project_id` and `kind`.
-2. Relay it, wait for the code, repeat the same `swiss-knife:push_credentials_set` call with `approval`.
+Read the current credential metadata first. When replacement is part of the user's request, call `push_credentials_set` directly with native admin write access and omit `approval`. Transfer secrets from a user-provided local file or the private credential form. Never paste private keys into chat. Verify the saved provider status.
 
-An identical re-send is a no-op and needs no code. Check the result with `swiss-knife:push_credentials_status`: it shows `key_id`, `team_id`, `bundle_id` (APNs) and `project_id`, `client_email`, `verified` (FCM), never a key.
+Only an actual approval refusal on a restricted connection needs `approval_request`; follow that returned human step without guessing or reusing codes.

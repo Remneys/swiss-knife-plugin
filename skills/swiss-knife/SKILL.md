@@ -1,6 +1,6 @@
 ---
 name: swiss-knife
-description: Entry point for the Swiss-Knife MCP server, which runs mobile builds, store uploads, TestFlight and Play releases, store listings, subscriptions, push, analytics and crash reports. Covers connecting the server (OAuth or token), starting with the help tool, choosing the right skill for a goal, relaying human_action blocks, and the approval-code flow. Use when the user mentions Swiss-Knife, asks what it can do, needs to connect it, or gives a mobile release or monetization goal that no more specific skill covers.
+description: Entry point for the Swiss-Knife MCP server, which runs mobile builds, store uploads, TestFlight and Play releases, store listings, subscriptions, push, analytics and crash reports. Covers connecting the server (OAuth or token), starting with the help tool, choosing the right skill for a goal, handling real human prerequisites, and delegated write permissions. Use when the user mentions Swiss-Knife, asks what it can do, needs to connect it, or gives a mobile release or monetization goal that no more specific skill covers.
 ---
 
 # Swiss-Knife
@@ -14,21 +14,20 @@ gets you connected and pointed at the right skill.
 `build_start` and `build_retry`. You can look at anything the account can see and
 propose a build. A person can also use the in-chat app's buttons to configure
 apps and repositories, edit listings, manage support and send push notifications
-with the required confirmation and approval. Open it with `dashboard_open`;
+with one in-chat preview and confirmation, without a copied dashboard code. Open it with `dashboard_open`;
 the app's buttons keep their own permissions and are not model tools. Builds > CI
 accepts App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates
 and Android keystores by private direct upload. Never ask for private key bytes
 or passwords in chat or tool arguments. The workspace panel can reveal an SDK
 key or mint a scoped CI token privately; Builds > CI can explicitly register a
-machine a person operates, with the existing human approval. Builds > Sandbox
+machine a person operates, after confirming the registration in its card. Builds > Sandbox
 provides simulated-store controls for sandbox apps. The app also accepts push,
 Git and RevenueCat credentials, private build environment values and outgoing
 webhook setup. Its workspace panel offers private receiver addresses, one-time
-webhook signing keys and SDK-key rotation/revoke, retaining administrator
-approval. Workspace notifications can also connect or replace Slack through a
+webhook signing keys and SDK-key rotation/revoke, retaining the administrator role and one in-chat confirmation. Workspace notifications can also connect or replace Slack through a
 private input, test the hook before saving, and disconnect it after review.
 Support > Inboxes can privately connect Telegram, WhatsApp and SMS, update
-channel credentials with native replacement approval, and copy newly generated
+channel credentials with an explicit replacement confirmation, and copy newly generated
 inbound secrets privately. Never copy these values into chat or tool arguments.
 Actions the app does not yet offer use a separately connected Codex or Claude
 Code session. When a step needs a tool you were not given, relay
@@ -66,6 +65,13 @@ the exact schemas with `help {tool}` and use `app_create`,
 keys when migrating from local fastlane. Continue with `ship-ios` and/or
 `ship-android` for prerequisites, preflight, build and upload verification.
 
+Codex may omit individual tools to fit its tool-list size limit. When a tool is
+not listed, call `help {tool: "exact_name"}`, parse its `input_schema` JSON, then
+use `tool_read {tool, arguments}` for reads or `tool_call {tool, arguments}` for
+writes. These gateways preserve the target's real permissions and validation.
+They do not accept app-only UI tools and are unavailable to ChatGPT connections.
+A missing individual tool is not a reason to stop or ask the user to reinstall.
+
 If those tools are missing and `help` reports the ChatGPT surface, this is a
 ChatGPT connector even if the surrounding desktop app is Codex. Report that
 connection mismatch instead of claiming the local plugin is ready for setup.
@@ -101,24 +107,18 @@ one. Discover the current tool names rather than guessing.
 | Save store or signing credentials                          | `swiss-knife:help` with goal `setup_credentials` |
 | Anything else                                              | `swiss-knife:help` with `area`                   |
 
-Workspace housekeeping with no skill of its own (tools, read `swiss-knife:help` with `area` for arguments): rotate an app's SDK key with `swiss-knife:app_key_rotate` (the old key stays valid as the previous key until you revoke it, so ship the new key in a build first; `swiss-knife:app_reveal_key` returns the new one), see and cut off connected assistants with `swiss-knife:connection_list` and `swiss-knife:connection_revoke`, change an app's attribution window, subscription transfer behavior or setup step with `swiss-knife:app_update`, and mint a scoped token for CI with `swiss-knife:app_token_mint` (`app_project_ids` up to 50 apps of one workspace; the role is clamped to yours and `roleClamped` says so). Members and invitations are in `support-inbox`. Key rotation, revoking a connection and minting a token change who can reach production data: confirm with the user first.
+Workspace housekeeping with no skill of its own (tools, read `swiss-knife:help` with `area` for arguments): rotate an app's SDK key with `swiss-knife:app_key_rotate` (the old key stays valid as the previous key until you revoke it, so ship the new key in a build first; `swiss-knife:app_reveal_key` returns the new one), see and cut off connected assistants with `swiss-knife:connection_list` and `swiss-knife:connection_revoke`, change an app's attribution window, subscription transfer behavior or setup step with `swiss-knife:app_update`, and mint a scoped token for CI with `swiss-knife:app_token_mint` (`app_project_ids` up to 50 apps of one workspace; the role is clamped to yours and `roleClamped` says so). Members and invitations are in `support-inbox`. Key rotation, revoking a connection and minting a token change access to production data: perform them only within the user's explicit request, retaining existing authorization when the target and scope are already clear.
 
 If two goals are mixed ("set up and ship", "ship and submit"), do them in that
 order, one skill at a time.
 
-## 4. Human steps: relay and stop
+## 4. Real human prerequisites
 
-Some steps only a person can do (create the app record in a store, install the
-GitHub App, create a store API key, answer a legal declaration). A blocked call
-returns `error.details.human_action`, or a `human_action` field beside a result:
-`{ who, what, url, why, verify_with }`.
+Some steps require a person or an external account action: accepting agreements, pairing a phone, granting store access or supplying facts for a legal declaration. A blocked call can return `error.details.human_action`, or a `human_action` beside the result: `{ who, what, url, why, verify_with }`.
 
-1. Relay `who`, `what`, `url` and `why` to the user verbatim.
-2. Stop. Do not retry, poll, or look for a workaround.
-3. When the user says it is done, call `verify_with.tool` and continue only if it
-   passes.
+Relay the actual required step and why it is needed. Pause only work that depends on it and continue independent authorized work. Do not repeat an unchanged refusal or bypass permissions. After completion, use `verify_with.tool` and continue when it passes. Reuse factual answers the user already supplied; ask only for missing facts.
 
-A `human_action` means only a person can clear it, whatever `error.code` says.
+Read the whole result: `approval_required: false` is informational, not a reason to stop or demand a dashboard code. A role or scope refusal requires the stated access; it cannot be solved by inventing an approval.
 
 ## 5. Authorization
 

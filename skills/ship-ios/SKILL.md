@@ -1,6 +1,6 @@
 ---
 name: ship-ios
-description: Takes an iOS app from a connected repo to a processed build in TestFlight through the Swiss-Knife MCP server (credentials, preflight, build, upload, store check). Use when the user says "ship my app to TestFlight", "build and upload my iOS app", "get a TestFlight build", or a build or signing step fails. Not for Android (use ship-android), store listings, App Review or production release, in-app purchases, or SDK setup (use setup-sdk).
+description: Takes an iOS app from a connected repo to a processed build in TestFlight through the Swiss-Knife MCP server (credentials, preflight, build, upload, store check). Use when the user says "ship my app to TestFlight", "build and upload my iOS app", "get a TestFlight build", or a build or signing step fails, or asks to build, install or debug locally on an iPhone. Not for Android (use ship-android), store listings, App Review or production release, in-app purchases, or SDK setup (use setup-sdk).
 ---
 
 # Ship an iOS build to TestFlight
@@ -11,54 +11,65 @@ Success: `swiss-knife:testflight_overview` lists the new build as processed. Our
 
 ## Local iPhone development
 
-For local changes and native debugging on an iPhone, use `swiss-build dev ios`.
-Prepare the local executor yourself with
-[local-executor.md](references/local-executor.md): it downloads the pinned
-release, checks its SHA-256 and returns an absolute executable path. Use that
-path for subsequent commands, even when `swiss-build` is absent from `PATH`.
-The user does not need to install a CLI, Bun or npm package manually.
-Remote worker builds use MCP and do not need this local executor.
+Use the connected plugin to prepare signing and the local executor to build,
+install and debug. Prepare the executor yourself using
+[local-executor.md](references/local-executor.md); use its verified absolute
+path even if `swiss-build` is absent from `PATH`. The user does not install a CLI,
+Bun or npm package manually. Remote worker builds do not need this executor.
 
-```sh
-swiss-build --json dev ios --project Example.xcodeproj --scheme Example --device DEVICE_UDID
-```
+1. Match the project's bundle ID to `app_list`; reuse that app. Inspect the
+   Xcode project, scheme and connected device. Full Xcode tools, device pairing,
+   trust and Developer Mode are required; an Apple portal login on the
+   developer's Mac is not. `--dry-run` inspects without creating a key or building.
+2. Run the verified executable with `--json dev ios --project Example.xcodeproj
+--scheme Example --device DEVICE_UDID --prepare-signing`, substituting the
+   actual project, scheme and device. Read the returned `{status:"signing_request",
+request}`. The request contains a public CSR, device and target entitlements;
+   the private key stays in macOS Keychain and must never be sent to a tool.
+3. Call `swiss-knife:ios_development_prepare` with `{app_project_id, request}`.
+   If it is absent from the compact tool list, read
+   `help {tool:"ios_development_prepare"}` and call
+   `tool_call {tool:"ios_development_prepare", arguments:{app_project_id,request}}`.
+   A native member connection with write access can do this directly: no
+   per-phone administrator visit, key-code copying or second Apple login.
+4. Save the returned `bundle` as JSON in a private local directory (0700) and
+   file (0600). Keep it out of source control, chat and logs. Run the same
+   executable/project/scheme/device with `--signing-bundle /absolute/private/bundle.json`.
+   It validates the developer key, phone and profiles for every target before
+   building Debug, installing and launching. The bundle contains certificates
+   and profiles, never the private key or team's App Store Connect credential.
+5. Verify `installed` or `launched` plus device evidence. A successful build
+   alone is not proof of installation. Later runs reuse validated cached signing.
 
-Replace `swiss-build` with the verified absolute path and substitute actual
-project, scheme and device values. A human terminal can omit
-them and select interactively. `--dry-run` inspects without creating keys or
-building. Full Xcode tools must be installed and the phone paired, trusted and
-in Developer Mode. An Apple portal login on the developer's Mac is not required.
+The app needs existing Apple App IDs and extension capabilities, a valid team
+App Store Connect key, and signing writes enabled. An administrator can enable
+signing through `signing_push_set` when the user authorized app setup; a member
+cannot grant that permission to themselves. This is app setup, not a per-device
+approval. Report the actual missing prerequisite and continue independent local
+preparation while the responsible person resolves it.
 
-The first run returns `human_action` and exits 2. Relay its URL and key code.
-An app administrator confirms the exact key and phone in their signed-in
-browser. Never approve that form yourself or copy a session cookie. The printed
-key fingerprint is not an approval token. The app needs existing Apple App IDs,
-extension capabilities, a valid App Store Connect team key and signing writes
-enabled by its owner. After human confirmation, rerun the identical command.
-When the developer is a workspace member, do not ask their connection to enable
-signing writes: that operation requires an administrator. Pass the app name and
-the returned refusal or approval request to the administrator; do not invent an
-approval URL. Local executor installation and a `--dry-run` remain independent
-of this permission, so complete them before handing off the signing blocker.
+`--identity SHA1` selects an existing development identity when selection is
+ambiguous. `--console` attaches device logs; `--debug` starts LLDB in a human
+terminal; `--no-install` only builds. For trusted project dependencies,
+`--trust-package-plugins` permits Swift package plugins and macros without
+opening Xcode; inspect those dependencies before opting in.
 
-The CLI reuses an existing Apple Development identity when unambiguous, or
-creates a key in macOS Keychain. `--identity SHA1` selects an existing identity.
-Private keys remain in the developer's Keychain. Profiles for the app and every extension
-are validated before building Debug, installing and launching. Later builds
-reuse valid signing material. In a human terminal, `--console` attaches logs
-and `--debug` starts LLDB. `--no-install` only builds. A successful build is
-not proof of installation: require `installed` or `launched` and device evidence.
-For trusted project dependencies, `--trust-package-plugins` permits Swift package
-plugins and macros without opening Xcode; inspect the dependencies before opting in.
+To refresh through the plugin, repeat prepare-signing → ios_development_prepare
+→ save the returned bundle → signing-bundle. Do not combine `--signing-bundle`
+with `--refresh-signing`. The latter belongs to the standalone browser fallback:
+it bypasses the cached bundle, resumes its pending refresh across invocations,
+and starts a new request after that refresh completes. Prefer the connected
+plugin flow; a standalone executor's browser handoff is not required when MCP
+already has the developer's authorized connection.
 
 ## Rules that never bend
 
 - If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
 - On restricted connections only, approval codes come from a signed-in human. Call `swiss-knife:approval_request` with the gated tool and your arguments, relay what it says, wait for the code, and send the same call again with it as `approval`. Never invent or reuse a code.
-- Never revoke or delete a certificate, profile or credential yourself.
+- Revoke or delete signing material only when the user explicitly selected that operation; inspect usage and honor the server’s in-use guard. A full certificate quota is not authorization to revoke another app’s key.
 - Always `swiss-knife:ship_prerequisites` and `swiss-knife:build_preflight` before `swiss-knife:build_start`.
 - Do not tell anyone to `npm install` swiss-build: it is not on npm. Its config is a plain object (see Step 3).
-- In ChatGPT your model tools read status and propose builds. Use `swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get` and `swiss-knife:testflight_overview` for status; `swiss-knife:build_start` and `swiss-knife:build_retry` only propose a build here. A person confirms a build in its card. The in-chat app also provides repository configuration and credential upload under Builds > CI, with current permissions and required approval. App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates and Android keystores travel directly from that form to Swiss-Knife, never through chat or tool arguments. For an IPA or AAB already built elsewhere, the person can use Builds > CI > Upload a built app, then review registration after the private upload. Registration verifies the actual binary; store upload remains a separate action. Open the app with `swiss-knife:dashboard_open`. Never ask for private key bytes or passwords in chat. For an operation the app does not offer, relay its `human_action`; use a separate connected Codex or Claude Code session for a missing write tool. Never call a hidden tool.
+- In ChatGPT your model tools read status and propose builds. Use `swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get` and `swiss-knife:testflight_overview` for status; `swiss-knife:build_start` and `swiss-knife:build_retry` only propose a build here. A person confirms a build in its card. The in-chat app also provides repository configuration and credential upload under Builds > CI, with current permissions and one in-app confirmation. App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates and Android keystores travel directly from that form to Swiss-Knife, never through chat or tool arguments. For an IPA or AAB already built elsewhere, the person can use Builds > CI > Upload a built app, then review registration after the private upload. Registration verifies the actual binary; store upload remains a separate action. Open the app with `swiss-knife:dashboard_open`. Never ask for private key bytes or passwords in chat. For an operation the app does not offer, relay its `human_action`; use a separate connected Codex or Claude Code session for a missing write tool. Never call a hidden tool.
 - In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
@@ -78,14 +89,14 @@ Copy and tick:
 
 ## Steps
 
-1. **Find the app.** `swiss-knife:workspace_whoami`, then `swiss-knife:app_list`. Reuse the app whose bundle id matches the project; keep its `app_project_id`. If there is none, ask before creating one.
-2. **Credentials.** `swiss-knife:build_credentials_list`. No `asc_api_key`: ask the user for issuer id, key id and the .p8, then `swiss-knife:build_credentials_save` (kind `asc_api_key`). Replacing a stored key needs an approval code. Then `swiss-knife:build_credentials_validate`; `invalid` means fix it now, `limited` means read the summary. Recipes: read references/credentials.md.
+1. **Find the app.** `swiss-knife:workspace_whoami`, then `swiss-knife:app_list`. Reuse the app whose bundle id matches the project; keep its `app_project_id`. If there is none and the user authorized connecting a new app, create it; ask only when workspace or app identity is ambiguous.
+2. **Credentials.** `swiss-knife:build_credentials_list`. No `asc_api_key`: obtain the issuer id, key id and .p8 through an existing local file or private upload, then `swiss-knife:build_credentials_save` (kind `asc_api_key`). Replace a stored key only when the user requested that replacement; native write connections use delegated authorization. Then `swiss-knife:build_credentials_validate`; `invalid` means fix it now, `limited` means read the summary. Recipes: read references/credentials.md.
 3. **Repo.** `swiss-knife:build_repo_status`. Not connected: `swiss-knife:build_repo_connect` with the https URL. Keep an existing GitHub App connection when it can read the repository; do not ask for a token just because the repo is private. A `git_token` is a fallback when the app connection cannot provide access; read references/credentials.md. The repo needs a `swiss-build.config.ts` that default-exports a plain object (no import from `@app-swiss-knife/swiss-build`); without one, preflight blocks. Keep the shape `swiss-build init` writes: `app` (appProjectId, name, iosBundleId) plus `stages`.
 4. **Prerequisites.** `swiss-knife:ship_prerequisites` with target `testflight`. Fix every `failed` item and re-run until `ready` is true. `not_verified` items are things no API can show; tell the user, do not claim them. Certificate item failed (`ASC_CERT_LIMIT`): do not build; read references/pitfalls.md.
 5. **Preflight.** `swiss-knife:build_preflight` with platform `ios`. Fix each `blocking` issue, re-run. Note the `version` it reports: that is what the build will be filed under.
 6. **Build.** `swiss-knife:build_start` with platform `ios` (pass `version` on the first build of an app; the build number is assigned for you). Keep `ids.jobId`. Poll `swiss-knife:build_get` with it until `succeeded` or `failed`; on `failed` read `swiss-knife:build_logs`, then the table in references/pitfalls.md. `swiss-knife:build_start` is not idempotent: before calling it again check `swiss-knife:release_list`, or pass `cancel_previous: true`. After a failure use `swiss-knife:build_retry`, which takes a fresh build number.
-7. **Upload.** `swiss-knife:submission_upload_build` with the `release_id` (platform defaults to ios; TestFlight only, it cannot reach review). Then `swiss-knife:submission_upload_status` until `uploaded`. `blocked` carries a `human_action`: relay and stop. `failed` carries `failureReason`: see references/pitfalls.md.
-8. **Export compliance.** A build Apple holds at `MISSING_EXPORT_COMPLIANCE` reaches no tester. `swiss-knife:preflight_platform_requirements` (`release_id`) lists it under `exportCompliance.builds[]` with `waiting: true` and a `buildExternalId`. Ask the user whether the app uses only encryption Apple exempts (HTTPS/TLS through the operating system); never answer on your own to get a build moving. Then `swiss-knife:testflight_export_compliance_answer` with `dry_run` (the default): it sends nothing and returns the verdict, the exact `confirmation` phrase and the approval handshake. After the user's yes, send the real call (`dry_run: false`, that `confirmation`); Codex and Claude Code omit `approval`. Only a restricted connection that actually requires a code uses `swiss-knife:approval_request`. It is a legal declaration under US export rules; if the binary declares non-exempt encryption it is refused and a person answers in App Store Connect with the export documentation.
+7. **Upload.** `swiss-knife:submission_upload_build` with the `release_id` (platform defaults to ios; TestFlight only, it cannot reach review). Then `swiss-knife:submission_upload_status` until `uploaded`. `blocked` carries a `human_action`: relay the required step and pause that dependent operation. `failed` carries `failureReason`: see references/pitfalls.md.
+8. **Export compliance.** A build Apple holds at `MISSING_EXPORT_COMPLIANCE` reaches no tester. `swiss-knife:preflight_platform_requirements` (`release_id`) lists it under `exportCompliance.builds[]` with `waiting: true` and a `buildExternalId`. Use the user’s existing factual declaration about encryption, or ask if it has not been supplied; never invent an answer to get the build moving. Then `swiss-knife:testflight_export_compliance_answer` with `dry_run` (the default): it sends nothing and returns the verdict, the exact build and declaration. When the user’s factual answer matches that build, send the real call (`dry_run: false`, using any returned `confirmation` value as an API argument rather than asking the user to retype it); Codex and Claude Code omit `approval`. Only a restricted connection that actually requires a code uses `swiss-knife:approval_request`. It is a legal declaration under US export rules; if the binary declares non-exempt encryption it is refused and a person answers in App Store Connect with the export documentation.
 9. **Verify.** `swiss-knife:testflight_overview`: the build must be listed. If it is not, say so; do not report success from the build status.
 
 ## When it breaks
@@ -93,9 +104,9 @@ Copy and tick:
 - Build stuck at `MISSING_EXPORT_COMPLIANCE` -> step 8; do not wait for it to clear by itself.
   One line each; the full table is in references/pitfalls.md (read when any step fails).
 
-- `ASC_CERT_LIMIT` -> stop; offer the human a .p12 upload or a portal revoke of their choice (and, if they own a second workspace on the team that holds a certificate, a team certificate link: references/pitfalls.md). Never call `swiss-knife:signing_action` with `revoke_certificate`.
-- Private repo, clone fails -> `git_token` (fine-grained, read-only Contents).
-- App record missing in App Store Connect -> `human_action` from `swiss-knife:ship_prerequisites`; relay and stop.
+- `ASC_CERT_LIMIT` -> stop; offer the human a .p12 upload or a portal revoke of their choice (and, if they own a second workspace on the team that holds a certificate, a team certificate link: references/pitfalls.md). Never revoke a certificate merely to free a slot. If the owner explicitly selects an unused certificate for revocation, use signing_action after inspecting its usage; the server’s in-use guard still applies.
+- Private repo, clone fails -> inspect `build_repo_status` and the installation's repository access; retain a working GitHub App connection. Use a read-only `git_token` only if app access cannot be configured.
+- App record missing in App Store Connect -> `human_action` from `swiss-knife:ship_prerequisites`; relay the required step and pause that dependent operation.
 - Need to look inside the build VM over SSH -> never put `debug` on the build trigger (the trigger route refuses it, `debug_requires_approval`). Start the build first, then call `swiss-knife:build_debug_request` for that `job_id` and the requested public key and hold policy. Native admin connections omit `approval`; restricted connections use the returned human step.
 - Duplicate build number -> `swiss-knife:build_retry` or a new `swiss-knife:build_start`; the number is assigned for you.
 

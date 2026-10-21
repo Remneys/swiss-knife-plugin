@@ -24,8 +24,8 @@ if [ "$(uname -m)" != arm64 ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/nu
   echo "This executor release requires an Apple Silicon Mac; no files were installed." >&2
   exit 2
 fi
-swiss_executor_sha=742209bb2c586b0add2650f4fe53bc75310593ac267608911bd4f4d7fc9808b1
-swiss_executor_dir="${SWISS_KNIFE_EXECUTOR_ROOT:-${HOME:?}/.local/share/swiss-knife/executors}/1cb5d4470c2d"
+swiss_executor_sha=76327d4c24b0bc7878c2428ed20a8ed912447422fe3d13a323f235ffe61cc4a4
+swiss_executor_dir="${SWISS_KNIFE_EXECUTOR_ROOT:-${HOME:?}/.local/share/swiss-knife/executors}/023b4cef8979"
 swiss_executor_bin="$swiss_executor_dir/swiss-build"
 mkdir -p "$swiss_executor_dir"
 swiss_executor_matches() {
@@ -38,7 +38,7 @@ if ! swiss_executor_matches "$swiss_executor_bin"; then
   curl --fail --silent --show-error --location \
     --proto '=https' --proto-redir '=https' --tlsv1.2 \
     --connect-timeout 10 --max-time 180 \
-    'https://github.com/remneys/swiss-knife-plugin/releases/download/swiss-build-1cb5d4470c2d/swiss-build-darwin-arm64' \
+    'https://github.com/remneys/swiss-knife-plugin/releases/download/swiss-build-023b4cef8979/swiss-build-darwin-arm64' \
     --output "$swiss_executor_tmp"
   if ! swiss_executor_matches "$swiss_executor_tmp"; then
     echo "Executor SHA-256 mismatch. Nothing was installed or executed." >&2
@@ -53,13 +53,15 @@ printf '%s\n' "$swiss_executor_bin"
 ```
 
 Use the returned absolute path to run `--cli-version` and `dev ios --help`.
-The version must be `0.1.0+1cb5d4470c2d` and the help must include `--device`,
-`--identity` and `--no-install`. Then continue the local development workflow.
+The version must be `0.1.0+023b4cef8979` and the help must include `--device`,
+`--identity`, `--no-install`, `--prepare-signing` and `--signing-bundle`. Then continue the local development workflow.
 For example, invoke `"/absolute/path/from/preparation" --json dev ios ...`;
 do not fall back to a different executable found on `PATH`.
 
 A failed download, checksum mismatch or unsupported machine is a concrete
 installation blocker. Report its output; do not substitute an unverified URL
 or request credentials. This release is public and needs no GitHub token.
-Installation does not grant signing permissions: an administrator still approves
-signing and the exact developer key/device through the server's `human_action`.
+Installation does not grant server permissions. Continue with the connected
+plugin's `ios_development_prepare` workflow in SKILL.md; a member with write
+access can prepare their own device when the app's signing setup is enabled.
+An Apple login or per-device browser approval is not part of that flow.

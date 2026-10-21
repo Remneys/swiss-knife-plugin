@@ -14,9 +14,9 @@ Success: the store itself says so. iOS: `swiss-knife:submission_status` after `s
 - If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
 - On restricted connections only, approval codes come from a signed-in human via `swiss-knife:approval_request`; never invent one. Call it with the gated tool and the same arguments, tell the user what `what_it_grants_in_plain_words` says, send them to `approve.url`, wait for the code, then repeat the SAME call with `dry_run: false` and `approval`. A code is single-use, bound to that exact action (a different `rollout_fraction: 0.5`, `fraction` or `replace_in_review` needs a new one) and expires.
 - Always start with `dry_run: true` (the default) on every gated tool. Only the user's own words ("submit it", "ship it to 10%") start a real run; "check if it is ready" never does.
-- Never set `replace_in_review`, `confirm_full_release`, `acknowledgements` or `provenance_override_reason` on your own. Each is the user's call; the override reason is their words, not yours.
+- Derive `replace_in_review` and `confirm_full_release` only from the user's explicit requested action; an existing request for everyone at once is enough, without another yes. Reuse supplied factual declarations for `acknowledgements`. Keep `provenance_override_reason` in the user's words; do not invent a justification.
 - Never move to 100% (`rollout_fraction: 1`) unless the user asked for everyone at once.
-- In ChatGPT the model reads `swiss-knife:submission_readiness`, `swiss-knife:submission_status`, `swiss-knife:store_overview` and `swiss-knife:testflight_overview`. Open `swiss-knife:dashboard_open` to inspect and use the in-chat app’s available release controls. A person confirms changes with the existing store switches, permissions and human approval; the model cannot call hidden writes. If a control requires action elsewhere or is not offered, relay its `human_action` and use the full MCP connection or the indicated human step.
+- In ChatGPT the model reads `swiss-knife:submission_readiness`, `swiss-knife:submission_status`, `swiss-knife:store_overview` and `swiss-knife:testflight_overview`. Open `swiss-knife:dashboard_open` to inspect and use the in-chat app’s available release controls. A person confirms changes with the current permissions and one in-card confirmation; the model cannot call hidden writes. If a control requires action elsewhere or is not offered, relay its `human_action` and use the full MCP connection or the indicated human step.
 - In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
@@ -36,8 +36,8 @@ Copy and tick:
 ## Steps
 
 1. **Find the release.** You need `release_id` and `app_project_id` (`swiss-knife:app_list`, `swiss-knife:release_list`). iOS: `swiss-knife:testflight_overview` must list a processed build. Android: `swiss-knife:submission_upload_status` (platform `android`) must say `uploaded`. If not, stop and use the ship skill.
-2. **Readiness.** `swiss-knife:submission_readiness` (`release_id`, `platform`; Android production: `track: "production"`). Fix each blocking line and re-run. A line with `human_action` (App Privacy, a first in-app purchase, a draft review submission) is relayed verbatim and waits for the user. See references/pitfalls.md.
-3. **Prepare.** `swiss-knife:submission_prepare`. iOS: optional `release_type: MANUAL`, `AFTER_APPROVAL` or `SCHEDULED` (the last with `earliest_release_date`); ask the user, do not choose. Keep the returned submission id (`swiss-knife:submission_list` shows it again).
+2. **Readiness.** `swiss-knife:submission_readiness` (`release_id`, `platform`; Android production: `track: "production"`). Fix each blocking line and re-run. A line with `human_action` (App Privacy, a first in-app purchase, a draft review submission) needs the indicated facts or action. Reuse facts and authorization already supplied, and pause only unresolved dependent work. See references/pitfalls.md.
+3. **Prepare.** `swiss-knife:submission_prepare`. iOS: optional `release_type: MANUAL`, `AFTER_APPROVAL` or `SCHEDULED` (the last with `earliest_release_date`); use the user's stated timing or the existing version's release policy. Ask only if timing is unresolved. Keep the returned submission id (`swiss-knife:submission_list` shows it again).
 4. **iOS: attach and configure.** `swiss-knife:submission_attach_build` (needs a processed build), then `swiss-knife:submission_configure_phased` with `enabled` as the user wants (7-day phased release). Set it before release: it cannot be started on a version that is already fully released.
 5. **Android: choose the exposure.** The user names the fraction. For production there is no default: pass `rollout_fraction: 0.1` (or the user's number) to `swiss-knife:submission_promote_production`. Timed steps instead of manual bumps: `swiss-knife:rollout_plan_create`, then `swiss-knife:rollout_plan_control` with `start` (references/pitfalls.md says what it needs).
 6. **Dry run.** iOS `swiss-knife:submission_submit`, Android `swiss-knife:submission_promote_production`, with `dry_run: true`. Show the user the readiness and payload.
@@ -49,9 +49,9 @@ Copy and tick:
 
 One line each; the full table is in references/pitfalls.md (read when any step fails).
 
-- `forbidden` with `human_action` -> an approval code is missing: `swiss-knife:approval_request`, relay, wait.
+- `forbidden` -> read the exact role, scope or human_action requirement. Do not assume a missing approval code: native write connections already use delegated access.
 - `fully_released_can_not_be_staged` -> the version is already 100% live; a phased release cannot be added. Tell the user; do not retry.
 - `changes_not_sent_for_review` -> looks retryable, but a bare retry gets the same answer. A person sends or discards the waiting changes in Play Console, then repeat the call.
-- `play_writes_blocked_after_rejection` -> Google refuses edits after a policy rejection. Human step in Play Console Policy status; relay and stop.
-- `play_policy_declaration_incomplete` -> an App content declaration is open. Human step; relay `human_action` and stop.
-- `play_release_in_review` -> wait, or the user chooses `replace_in_review`, which cancels the review and needs its own approval code.
+- `play_writes_blocked_after_rejection` -> Google refuses edits after a policy rejection. Relay the Play Console Policy status step and pause the blocked release.
+- `play_policy_declaration_incomplete` -> an App content declaration is open. Relay the required human step and pause the dependent release operation.
+- `play_release_in_review` -> wait, or the user chooses `replace_in_review`, which cancels the review and must be explicitly requested. Native write connections use delegated authorization.

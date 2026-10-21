@@ -1,5 +1,3 @@
-**Codex / Claude Code authorization:** a connected `write` scope delegates operations within the user's request and current workspace role. Call the requested tool directly, omitting `approval`; do not ask for a dashboard code or repeat an authorization already given in this conversation. Preview consequential changes and verify their result. Enabling a write switch is allowed through its tool when the user authorized that setup. A read token or insufficient role still cannot write. The approval-code instructions below apply only when this connection actually returns `approval_required` or an approval `human_action` (for example a restricted or older server). ChatGPT keeps its in-chat controls and permissions.
-
 # Android credentials
 
 Read when a credential is missing or invalid, the fingerprint is unknown, or the repo is private.
@@ -10,11 +8,11 @@ Read when a credential is missing or invalid, the fingerprint is unknown, or the
 - Upload keystore
 - Expected upload-key fingerprint
 - Git token for a private repo
-- Approval handshake
+- Replacing credentials
 
 ## Play service account
 
-Creating the service account and granting it access in Play Console is a human step (no API). If `swiss-knife:ship_prerequisites` says the app is not visible to it, relay its `human_action` and stop. Once the user has the JSON key:
+Creating the service account and granting it access in Play Console is a human step (no API). If `swiss-knife:ship_prerequisites` says the app is not visible to it, relay its `human_action` and pause only work requiring that access. Once the user has the JSON key:
 
 ```
 swiss-knife:build_credentials_save
@@ -29,9 +27,9 @@ Read `validation` in the answer; `swiss-knife:build_credentials_validate` re-che
 Two cases, never mixed:
 
 - The app already has an upload key Play accepted: the user supplies that keystore. Save it with kind `android_keystore`, payload `{ keystoreBase64, keystorePassword, keyAlias, keyPassword }`.
-- A brand-new app with no upload key: `swiss-knife:build_android_keystore_generate` (approval code needed). Then `swiss-knife:build_android_keystore_certificate` returns the public certificate; the user registers it in Play Console (App integrity, App signing, upload key certificate; Play has no API for it) and tells you what fingerprint Play shows.
+- A brand-new app with no upload key: `swiss-knife:build_android_keystore_generate` (native write connections omit approval). Then `swiss-knife:build_android_keystore_certificate` returns the public certificate; the user registers it in Play Console (App integrity, App signing, upload key certificate; Play has no API for it) and tells you what fingerprint Play shows.
 
-Overwriting a stored keystore loses the current key, so it needs an approval code.
+Replacing a stored upload key requires the user’s explicit intent. To generate a new key in place of a stored one, use `build_android_keystore_generate` with `replace: true`; importing the user’s existing keystore uses `build_credentials_save` and its payload, which has no replace flag. Native write connections omit approval; restricted legacy connections use the returned human step.
 
 ## Expected upload-key fingerprint
 
@@ -39,7 +37,7 @@ Overwriting a stored keystore loses the current key, so it needs an approval cod
 
 ## Git token for a private repo
 
-The Swiss-Knife GitHub App is private, so a private repo is not readable through it. Use a fine-grained personal access token with read-only Contents on that one repository (GitLab: `read_repository`; classic GitHub: `repo`).
+Inspect `build_repo_status` first and retain an existing GitHub App installation that can read the repository. Private repositories work when included in that installation. Use a fine-grained token with read-only Contents for that repository only as a fallback when app access cannot be configured (GitLab: `read_repository`). Do not request a second credential when the existing connection works.
 
 ```
 swiss-knife:build_credentials_save
@@ -48,6 +46,8 @@ swiss-knife:build_credentials_save
 
 Then `swiss-knife:build_git_token_check`.
 
-## Approval handshake
+## Replacing credentials
 
-Replacing a stored credential, or generating a keystore, is refused without a code. Call `swiss-knife:approval_request` with the gated tool (`build_credentials_save`, `build_credentials_delete` or `build_android_keystore_generate`) and the arguments you mean to use. Relay what it says verbatim and stop. When the user gives you the code, repeat the same call with `approval` set to it. Do not invent, guess or reuse a code.
+Read existing metadata first and retain a working credential unless the user requested replacement. An authenticated native connection with the required write scope and role can save the requested replacement directly, omitting `approval`. Read its validation result afterwards. Private bytes come from a user-provided local file or the private upload form, never chat.
+
+Only if the server actually returns an approval refusal on a restricted legacy connection, call `swiss-knife:approval_request` for the same operation and relay its human step. Never invent or reuse a code. A missing role or scope needs the appropriate access, not an approval code.
