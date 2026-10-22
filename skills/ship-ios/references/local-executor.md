@@ -24,8 +24,8 @@ if [ "$(uname -m)" != arm64 ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/nu
   echo "This executor release requires an Apple Silicon Mac; no files were installed." >&2
   exit 2
 fi
-swiss_executor_sha=4b243fcec5fb9e1feb72e57e8450a754bf73ee3a2bfb1834ec7d53141a20a8a8
-swiss_executor_dir="${SWISS_KNIFE_EXECUTOR_ROOT:-${HOME:?}/.local/share/swiss-knife/executors}/25413ba57698"
+swiss_executor_sha=3bb659f90b670fef8dc4d7b28d2767b919d2ec3fe693332fc2a34194acb81d98
+swiss_executor_dir="${SWISS_KNIFE_EXECUTOR_ROOT:-${HOME:?}/.local/share/swiss-knife/executors}/3751a88d99ef"
 swiss_executor_bin="$swiss_executor_dir/swiss-build"
 mkdir -p "$swiss_executor_dir"
 swiss_executor_matches() {
@@ -38,7 +38,7 @@ if ! swiss_executor_matches "$swiss_executor_bin"; then
   curl --fail --silent --show-error --location \
     --proto '=https' --proto-redir '=https' --tlsv1.2 \
     --connect-timeout 10 --max-time 180 \
-    'https://github.com/remneys/swiss-knife-plugin/releases/download/swiss-build-25413ba57698/swiss-build-darwin-arm64' \
+    'https://github.com/remneys/swiss-knife-plugin/releases/download/swiss-build-3751a88d99ef/swiss-build-darwin-arm64' \
     --output "$swiss_executor_tmp"
   if ! swiss_executor_matches "$swiss_executor_tmp"; then
     echo "Executor SHA-256 mismatch. Nothing was installed or executed." >&2
@@ -53,8 +53,10 @@ printf '%s\n' "$swiss_executor_bin"
 ```
 
 Use the returned absolute path to run `--cli-version` and `dev ios --help`.
-The version must be `0.1.0+25413ba57698` and the help must include `--device`,
-`--identity`, `--no-install`, `--prepare-signing` and `--signing-bundle`. Then continue the local development workflow.
+The version must be `0.1.0+3751a88d99ef` and the help must include `--device`,
+`--identity`, `--no-install`, `--agent`, `--prepare-signing` and
+`--signing-bundle`. Also verify `apple --help` lists `login`, `connect` and
+`configure`. Then continue the local development workflow.
 This release reads existing macOS Keychain keys in both PEM and hexadecimal form.
 An executor update preserves the existing signing key; do not delete or replace
 it to recover from an older executor's `Invalid PEM formatted message` error.
@@ -65,6 +67,6 @@ A failed download, checksum mismatch or unsupported machine is a concrete
 installation blocker. Report its output; do not substitute an unverified URL
 or request credentials. This release is public and needs no GitHub token.
 Installation does not grant server permissions. Continue with the connected
-plugin's `ios_development_prepare` workflow in SKILL.md; a member with write
+plugin's `--agent` signing workflow in SKILL.md; a member with write
 access can prepare their own device when the app's signing setup is enabled.
 An Apple login or per-device browser approval is not part of that flow.

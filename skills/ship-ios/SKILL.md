@@ -22,45 +22,71 @@ Bun or npm package manually. Remote worker builds do not need this executor.
    trust and Developer Mode are required; an Apple portal login on the
    developer's Mac is not. `--dry-run` inspects without creating a key or building.
 2. Run the verified executable with `--json dev ios --project Example.xcodeproj
---scheme Example --device DEVICE_UDID --prepare-signing`, substituting the
-   actual project, scheme and device. Read the returned `{status:"signing_request",
-request}`. The request contains a public CSR, device and target entitlements;
-   the private key stays in macOS Keychain and must never be sent to a tool.
-3. Call `swiss-knife:ios_development_prepare` with `{app_project_id, request}`.
-   If it is absent from the compact tool list, read
-   `help {tool:"ios_development_prepare"}` and call
-   `tool_call {tool:"ios_development_prepare", arguments:{app_project_id,request}}`.
-   A native member connection with write access can do this directly: no
-   per-phone administrator visit, key-code copying or second Apple login.
-4. Save the returned `bundle` as JSON in a private local directory (0700) and
-   file (0600). Keep it out of source control, chat and logs. Run the same
-   executable/project/scheme/device with `--signing-bundle /absolute/private/bundle.json`.
-   It validates the developer key, phone and profiles for every target before
-   building Debug, installing and launching. The bundle contains certificates
-   and profiles, never the private key or team's App Store Connect credential.
-5. Verify `installed` or `launched` plus device evidence. A successful build
-   alone is not proof of installation. Later runs reuse validated cached signing.
+--scheme Example --device DEVICE_UDID --agent`, substituting the actual
+   project, scheme and device. Keep this process running with writable stdin.
+   On a valid cache it proceeds directly. Otherwise it prints an NDJSON frame
+   `{protocol:1,type:"signing_required",id,request,tool:"ios_development_prepare"}`.
+   The request contains a public CSR, phone and every target's entitlements;
+   its private key stays in macOS Keychain.
+3. Call `swiss-knife:ios_development_prepare` with `{app_project_id,request}`.
+   If absent from the compact list, use `help {tool:"ios_development_prepare"}`
+   then `tool_call`. Native members with write access can prepare signing
+   directly after the app's owner setup. Send one JSON line to the same
+   executor's stdin: `{protocol:1,type:"signing_bundle",id,bundle}`, using
+   that frame's exact `id` and the returned `bundle`. Do not ask the person
+   to copy a CSR, certificate or profile. The executor validates its key,
+   phone and every extension, caches signing privately, then builds,
+   installs and launches. Never send its private key to a tool.
+4. Verify `installed` or `launched` and actual device evidence. A successful
+   build alone is not proof of installation. `--refresh-signing --agent`
+   requests fresh signing with the same local key. On interruption repeat
+   the same command; do not delete the key or issue a new CSR needlessly.
 
-The app needs existing Apple App IDs and extension capabilities, a valid team
-App Store Connect key, and signing writes enabled. An administrator can enable
-signing through `signing_push_set` when the user authorized app setup; a member
-cannot grant that permission to themselves. This is app setup, not a per-device
-approval. Report the actual missing prerequisite and continue independent local
-preparation while the responsible person resolves it.
+If the execution host cannot keep stdin writable, `--prepare-signing` and
+`--signing-bundle` remain an agent-managed fallback. Keep any bundle file
+in a private directory (0700), mode 0600, outside source control and logs.
+Do not combine `--signing-bundle` with `--refresh-signing`.
 
-`--identity SHA1` selects an existing development identity when selection is
-ambiguous. `--console` attaches device logs; `--debug` starts LLDB in a human
-terminal; `--no-install` only builds. For trusted project dependencies,
-`--trust-package-plugins` permits Swift package plugins and macros without
-opening Xcode; inspect those dependencies before opting in.
+### One-time owner setup
 
-To refresh through the plugin, repeat prepare-signing → ios_development_prepare
-→ save the returned bundle → signing-bundle. Do not combine `--signing-bundle`
-with `--refresh-signing`. The latter belongs to the standalone browser fallback:
-it bypasses the cached bundle, resumes its pending refresh across invocations,
-and starts a new request after that refresh completes. Prefer the connected
-plugin flow; a standalone executor's browser handoff is not required when MCP
-already has the developer's authorized connection.
+Check `build_credentials_list` and validate the existing team key first.
+Members reuse a connected app; they do not need the owner's Apple password,
+a new team key, or a separate approval for each Mac or phone.
+An administrator can enable signing with `signing_push_set` when the user
+has authorized app setup. A member cannot grant themselves that permission.
+
+For a missing or unusable team key, prefer the private Apple Account form:
+Use `dashboard_open` and the in-app Apple Account control when the host
+supports the embedded app. The internal form-preparation tool is app-only;
+never invoke it directly or through `tool_call`. If the host cannot show the
+widget, relay the structured `human_action` for the private dashboard form. The owner enters their Apple password
+and verification code in the private widget or dashboard form, chooses the
+team/provider and reviews any key creation there. Never request these secrets
+in chat or tool arguments. Read [apple-owner.md](references/apple-owner.md)
+for host fallback, verification and the optional local privacy helper.
+
+Missing App IDs, App Groups or extension capabilities are a separate setup
+issue. The private account form connects the team key; it does not configure
+those capabilities. The reference describes the existing local owner helper
+for that conditional case. Reuse existing state and retry signing after
+configuration; never strip an entitlement to make a build pass.
+
+### Phones and installation links
+
+`ios_device_list {app_project_id}` lists existing Apple devices available
+to the connection and phones collected for this app. Administrators can
+see the configured Apple team's inventory; member visibility is app-scoped.
+For a new phone, call `ios_device_enrollment_create {app_project_id}` and
+share its registration URL or QR. The person opens it in iPhone Safari
+and installs the device-registration profile in Settings. Poll
+`ios_device_enrollment_get` only while pending, bounded by its expiry.
+Collection does not itself register a device with Apple or install the app.
+Actual signing registers the selected device and prepares every target.
+
+`--identity SHA1` selects an existing development identity when ambiguous.
+`--console` attaches logs; `--debug` starts LLDB in a human terminal;
+`--no-install` only builds. Inspect trusted project dependencies before
+using `--trust-package-plugins` for Swift package plugins and macros.
 
 ## Rules that never bend
 
@@ -69,7 +95,7 @@ already has the developer's authorized connection.
 - Revoke or delete signing material only when the user explicitly selected that operation; inspect usage and honor the server’s in-use guard. A full certificate quota is not authorization to revoke another app’s key.
 - Always `swiss-knife:ship_prerequisites` and `swiss-knife:build_preflight` before `swiss-knife:build_start`.
 - Do not tell anyone to `npm install` swiss-build: it is not on npm. Its config is a plain object (see Step 3).
-- In ChatGPT your model tools read status and propose builds. Use `swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get` and `swiss-knife:testflight_overview` for status; `swiss-knife:build_start` and `swiss-knife:build_retry` only propose a build here. A person confirms a build in its card. The in-chat app also provides repository configuration and credential upload under Builds > CI, with current permissions and one in-app confirmation. App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates and Android keystores travel directly from that form to Swiss-Knife, never through chat or tool arguments. For an IPA or AAB already built elsewhere, the person can use Builds > CI > Upload a built app, then review registration after the private upload. Registration verifies the actual binary; store upload remains a separate action. Open the app with `swiss-knife:dashboard_open`. Never ask for private key bytes or passwords in chat. For an operation the app does not offer, relay its `human_action`; use a separate connected Codex or Claude Code session for a missing write tool. Never call a hidden tool.
+- In ChatGPT your model tools read status and propose builds. Use `swiss-knife:ship_prerequisites`, `swiss-knife:build_preflight`, `swiss-knife:build_get` and `swiss-knife:testflight_overview` for status; `swiss-knife:build_start` and `swiss-knife:build_retry` only propose a build here. A person confirms a build in its card. The in-chat app also provides private Apple Account connection, repository configuration and credential upload under Builds > CI, with current permissions and one in-app confirmation. App Store Connect .p8 keys, Play service-account JSON, iOS P12 certificates and Android keystores travel directly from that form to Swiss-Knife, never through chat or tool arguments. For an IPA or AAB already built elsewhere, the person can use Builds > CI > Upload a built app, then review registration after the private upload. Registration verifies the actual binary; store upload remains a separate action. Open the app with `swiss-knife:dashboard_open`. Never ask for private key bytes or passwords in chat. For an operation the app does not offer, relay its `human_action`; use a separate connected Codex or Claude Code session for a missing write tool. Never call a hidden tool.
 - In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
 
 ## Checklist
@@ -90,7 +116,7 @@ Copy and tick:
 ## Steps
 
 1. **Find the app.** `swiss-knife:workspace_whoami`, then `swiss-knife:app_list`. Reuse the app whose bundle id matches the project; keep its `app_project_id`. If there is none and the user authorized connecting a new app, create it; ask only when workspace or app identity is ambiguous.
-2. **Credentials.** `swiss-knife:build_credentials_list`. No `asc_api_key`: obtain the issuer id, key id and .p8 through an existing local file or private upload, then `swiss-knife:build_credentials_save` (kind `asc_api_key`). Replace a stored key only when the user requested that replacement; native write connections use delegated authorization. Then `swiss-knife:build_credentials_validate`; `invalid` means fix it now, `limited` means read the summary. Recipes: read references/credentials.md.
+2. **Credentials.** `swiss-knife:build_credentials_list`, then `swiss-knife:build_credentials_validate` for an existing `asc_api_key`. Reuse a valid connection. For a missing or invalid key, use the private Apple Account form described in references/apple-owner.md; a person can also upload an existing .p8 privately. Do not read private-key bytes into model context. Replace a stored key only when requested; native writes use delegated authorization. Read validation: `invalid` blocks shipping, `limited` needs its specific summary. Recipes: references/credentials.md.
 3. **Repo.** `swiss-knife:build_repo_status`. Not connected: `swiss-knife:build_repo_connect` with the https URL. Keep an existing GitHub App connection when it can read the repository; do not ask for a token just because the repo is private. A `git_token` is a fallback when the app connection cannot provide access; read references/credentials.md. The repo needs a `swiss-build.config.ts` that default-exports a plain object (no import from `@app-swiss-knife/swiss-build`); without one, preflight blocks. Keep the shape `swiss-build init` writes: `app` (appProjectId, name, iosBundleId) plus `stages`.
 4. **Prerequisites.** `swiss-knife:ship_prerequisites` with target `testflight`. Fix every `failed` item and re-run until `ready` is true. `not_verified` items are things no API can show; tell the user, do not claim them. Certificate item failed (`ASC_CERT_LIMIT`): do not build; read references/pitfalls.md.
 5. **Preflight.** `swiss-knife:build_preflight` with platform `ios`. Fix each `blocking` issue, re-run. Note the `version` it reports: that is what the build will be filed under.

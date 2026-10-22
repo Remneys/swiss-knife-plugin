@@ -11,15 +11,21 @@ Read when a credential is missing, invalid, or the repo is private.
 
 ## App Store Connect API key
 
-Needed for managed signing and upload. Read the issuer id, key id and .p8 from a user-provided local file in Codex/Claude Code, or the private credential form in ChatGPT. Do not ask for private-key bytes in chat. The key must belong to the team that owns the app. Creating the key is a human step in App Store Connect; if the user has none, explain that prerequisite and pause only work that needs the key.
+Needed for managed signing and upload. First inspect stored metadata and
+validate an existing key; members reuse the app's configured connection.
+For a missing or unusable key, prefer the private Apple Account form in
+[apple-owner.md](apple-owner.md). The owner signs in and confirms the intended
+team and key action there. Creating a key is handled by that connection;
+manual portal export is not a universal prerequisite.
 
-```
-swiss-knife:build_credentials_save
-  app_project_id, platform: "ios", kind: "asc_api_key",
-  payload: { issuerId, keyId, p8 }
-```
+An owner who already has a .p8 can instead use the private credential upload
+form. Private-key bytes, passwords and Apple verification codes never belong
+in chat or model tool arguments. The key must belong to the app's Apple team.
+Do not replace a stored key unless the user requested replacement.
 
-The answer carries `validation` (`valid`, `limited`, `invalid`). Always read it. `swiss-knife:build_credentials_validate` re-checks later. Saving the first one needs nothing more. Replace a stored key only when the user requested replacement; native write connections omit approval. Restricted legacy connections use the handshake below.
+Verify with `build_credentials_list` and `build_credentials_validate`.
+Read `validation`: `valid`, `limited`, or `invalid`; a saved row alone does
+not establish working Apple access.
 
 ## Git token for a private repo
 
