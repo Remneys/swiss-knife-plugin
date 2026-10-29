@@ -16,7 +16,7 @@ Two layers, do not mix them up:
 
 A config product and a catalogue product meet by platform plus store SKU (`product_id`), so use the same SKU in both.
 
-An offering is the paywall. Its `template_id` and `config` are the only paywall controls in MCP; there is no tool that designs or previews paywall screens, so do not promise that. Reading the offering in the app is `setup-sdk` territory.
+An offering is the paywall. Native clients edit its `config` or `config_patch`; `offering_get` returns its schema, preview URL and `updatedAt`. Send that version as `expected_updated_at` to refuse a concurrent change. The in-chat app's Paywalls > Design & packages view offers structured content and style editing with a local preview and reviewed saving. The preview covers text, package labels and styling; images and countdown behavior appear in the saved paywall. Custom HTML is outside this structured editor. Reading the offering in a mobile app is `setup-sdk` territory.
 
 ## Rules that never bend
 
