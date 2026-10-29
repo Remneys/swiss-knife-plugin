@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "swiss-knife",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Ship and monetize mobile apps from chat: iOS and Android builds, TestFlight and Google Play releases, store listings, subscriptions, push and crash analytics, through the Swiss-Knife MCP server.",
   "author": {
     "name": "Swiss-Knife",
@@ -107,9 +107,9 @@
         "commerce_description": "Swiss-Knife does not sell products or process payments through ChatGPT. It manages subscription products in the user's own app stores."
       },
       "publication": {
-        "release_notes": "0.9.1: Bounded dashboard read batching, scoped cache budgets, discoverable read arguments and stable Overview loading. Mutations retain their existing permissions."
+        "release_notes": "0.9.2: Google Play managed publishing and approved-changes publishing workflow, with explicit browser execution and scope verification."
       },
-      "release_notes": "0.9.1: Bounded dashboard read batching, scoped cache budgets, discoverable read arguments and stable Overview loading. Mutations retain their existing permissions."
+      "release_notes": "0.9.2: Google Play managed publishing and approved-changes publishing workflow, with explicit browser execution and scope verification."
     }
   }
 }

@@ -83,6 +83,8 @@ Call `swiss-knife:help` with no arguments: it lists the tool areas and the goals
 with the recommended order of calls. With `goal`, `area` or `tool` it narrows to
 one. Discover the current tool names rather than guessing.
 
+For Google Play managed publishing on/off and publishing approved changes together, use `help {goal: "manage_play_publishing"}` and the submit-release skill. These actions use the signed-in Play Console browser workflow, not a Developer API mutation.
+
 ## 3. Pick the skill for the goal
 
 | The user wants to                                          | Use                                              |

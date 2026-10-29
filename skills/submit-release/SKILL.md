@@ -1,6 +1,6 @@
 ---
 name: submit-release
-description: Sends a build that is already in TestFlight or Play internal testing to App Review or Google Play production, with phased or staged rollout, release and rollout control, through the Swiss-Knife MCP server. Use when the user says "submit for App Review", "release to the App Store", "promote to production", "roll out to 10%", "halt the rollout" or "phased release". Not for getting the build onto TestFlight or Play internal (use ship-ios or ship-android) or store listings and screenshots.
+description: Sends a build that is already in TestFlight or Play internal testing to App Review or Google Play production, with phased or staged rollout, release and rollout control, through the Swiss-Knife MCP server. Use when the user says "submit for App Review", "release to the App Store", "promote to production", "roll out to 10%", "halt the rollout", "phased release", "managed publishing on/off", "Publish changes" or "publish approved changes". Google Play managed publishing and publishing approved changes use the signed-in Console browser workflow. Not for getting the build onto TestFlight or Play internal (use ship-ios or ship-android) or editing store listings and screenshots. Publishing already-approved listing changes is in scope.
 ---
 
 # Submit a release for review and roll it out
@@ -14,10 +14,20 @@ Success: the store itself says so. iOS: `swiss-knife:submission_status` after `s
 - If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
 - On restricted connections only, approval codes come from a signed-in human via `swiss-knife:approval_request`; never invent one. Call it with the gated tool and the same arguments, tell the user what `what_it_grants_in_plain_words` says, send them to `approve.url`, wait for the code, then repeat the SAME call with `dry_run: false` and `approval`. A code is single-use, bound to that exact action (a different `rollout_fraction: 0.5`, `fraction` or `replace_in_review` needs a new one) and expires.
 - Always start with `dry_run: true` (the default) on every gated tool. Only the user's own words ("submit it", "ship it to 10%") start a real run; "check if it is ready" never does.
-- Derive `replace_in_review` and `confirm_full_release` only from the user's explicit requested action; an existing request for everyone at once is enough, without another yes. Reuse supplied factual declarations for `acknowledgements`. Keep `provenance_override_reason` in the user's words; do not invent a justification.
+- Set `replace_in_review` only when the user explicitly asks to cancel or replace the release in review. Set `confirm_full_release` only from an explicit request for everyone at once; an existing such request is enough, without another yes. Reuse supplied factual declarations for `acknowledgements`. Keep `provenance_override_reason` in the user's words; do not invent a justification.
 - Never move to 100% (`rollout_fraction: 1`) unless the user asked for everyone at once.
 - In ChatGPT the model reads `swiss-knife:submission_readiness`, `swiss-knife:submission_status`, `swiss-knife:store_overview` and `swiss-knife:testflight_overview`. Open `swiss-knife:dashboard_open` to inspect and use the in-chat app’s available release controls. A person confirms changes with the current permissions and one in-card confirmation; the model cannot call hidden writes. If a control requires action elsewhere or is not offered, relay its `human_action` and use the full MCP connection or the indicated human step.
 - In Codex and Claude Code, use delegated write access as described above. Do not request an approval code proactively.
+
+## Google Play managed publishing
+
+For **turn managed publishing on/off** or **Publish changes** after approval,
+start with `help {goal: "manage_play_publishing"}` and read
+[the Play publishing workflow](references/play-publishing.md). These are Console
+operations, not `edits.commit`, rollout controls, or iOS `submission_release_now`.
+When an authorized signed-in browser tool is available, carry out the requested
+operation there and verify it; otherwise return the exact `human_action`.
+Do not stop at "no MCP tool" or claim that a service-account token can do it.
 
 ## Checklist
 
