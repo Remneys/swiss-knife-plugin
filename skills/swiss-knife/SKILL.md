@@ -132,5 +132,5 @@ Use `approval_request` only to inspect a restricted connection's actual approval
 
 - Do everything a tool can do through the tools. Send the user somewhere, or ask
   them to do something by hand, only when a `human_action` says so.
-- Retry a failed call only when `error.retryable` is true. `invalid_request`: fix
-  the arguments. `precondition_failed`: change the state first.
+- Retry tool failures only when `error.retryable` is true. For `rate_limited`, wait the full `details.retry_after_seconds` before retrying. A transport HTTP 429 can arrive without a tool envelope: use its `Retry-After` header or named wait, then retry a read once. When a write's outcome is unknown, read its state before another write. `invalid_request`: fix the arguments; `precondition_failed`: change the state first.
+- Chats and cards on one connection share a request budget. Batch related reads for one app with `describe_data` then `query_data` (up to eight reads), reuse fresh answers and avoid parallel polling loops. Use `refresh:true` for an explicit refresh; it has a separate per-user/app quota.

@@ -1,6 +1,6 @@
 ---
 name: observability
-description: Answers analytics questions and manages crashes and alerts for an app through the Swiss-Knife MCP server (events, funnels, retention, subscription and crash-free stats, saved reports, cohorts, boards, conversion alerts, anomalies, notifications, error issues and their grouping, error alert rules, data filters, debug files). Use when the user says "what's my signup to purchase funnel", "how many users came back after a week", "what's crashing", "is the new release stable", "triage this crash", "mark this crash issue resolved or ignored", or "alert me on new crashes", "save this report", "build a cohort of paying users", "merge these two crash issues", "upload my dSYM". Not for paywalls and pricing (use monetization), push (use push), or adding SDK events to code (use setup-sdk).
+description: Answers analytics questions and manages crashes and alerts for an app through the Swiss-Knife MCP server (events, funnels, retention, subscription and crash-free stats, saved reports, cohorts, boards, conversion alerts, anomalies, notifications, performance traces and release latency, error issues and their grouping, error alert rules, data filters, debug files). Use when the user says "what's my signup to purchase funnel", "how many users came back after a week", "what's crashing", "is the new release stable", "why is this screen slow", "compare release performance", "triage this crash", "mark this crash issue resolved or ignored", or "alert me on new crashes", "save this report", "build a cohort of paying users", "merge these two crash issues", "upload my dSYM". Not for paywalls and pricing (use monetization), push (use push), or adding SDK events to code (use setup-sdk).
 ---
 
 # Read analytics, triage errors, manage alerts
@@ -27,6 +27,14 @@ Mutable lists bypass the server cache and have a five-second UI reuse budget. An
 
 Cache freshness is not an ingestion watermark or a saved historical snapshot. Sources use a bounded, process-local cache for at most 30 seconds from read start; another process or a later read may observe newer data. Authorization is checked before cached results. Use `refresh:true` only for an explicit refresh, not routine questions; it is limited to six requests per minute per user and app. The manifest currently covers Metrics; do not imply that every plugin section has page provenance.
 
+## Investigate slow screens and release regressions
+
+Use `help {tool:"performance_transactions"}` for the current schema. Read transactions for the requested app, time window and environment; use `group_by_release:true` to compare releases and `name_contains` only with a name discovered in the returned data. In Codex, an unlisted tool is available through `tool_read`. In ChatGPT, use a performance tool only when it is listed; otherwise `dashboard_open` presents the in-chat Performance view. Do not claim to have investigated a trace without its returned data.
+
+Compare `count`, `p50_ms`, `p95_ms`, `error_rate` and `stalled_count` with the sample size and window stated. These are SDK-observed transactions. `available:false` is unavailable storage; `has_spans:false` is missing instrumentation, not evidence that the app is fast. A release with few traces cannot establish a regression by itself.
+
+Open a returned `slowest_trace_id` using `performance_trace_get` with `include_session:true`. Follow the root transaction and child spans to the slow operation; the correlated session can connect analytics, paywall events and errors by exact session ID. Missing session data does not prove that no payment or error occurred. Distinguish observed timings from a proposed cause, and report truncation or expired traces. Reuse the same app, environment and comparison window when checking a fix.
+
 ## Rules that never bend
 
 - If a tool returns `human_action`, relay the required step and pause only the work that depends on it; continue independent authorized work. After the user completes it, call `verify_with`. Do not retry unchanged refusals.
@@ -43,7 +51,7 @@ Copy and tick:
 
 ```
 - [ ] 1. App found (app_project_id)
-- [ ] 2. Question classified: number, funnel/retention, issue, or alert
+- [ ] 2. Question classified: number, funnel/retention, performance, issue, or alert
 - [ ] 3. Names discovered (event_list / property_list) before any report
 - [ ] 4. Read run, window stated with the numbers
 - [ ] 5. Writes: list first, one call, no repeat
