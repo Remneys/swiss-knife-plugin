@@ -55,3 +55,9 @@ Success: every conversation you report or change was read with `swiss-knife:conv
 ## Choose how the support agent runs
 
 Recommend hosted autopilot for unattended replies, including when the operator's computer is asleep. For an operator who wants a Claude Code channel event or a local Codex draft, use [local support and provider setup](references/local-support.md). The local watcher drafts only; the reply preview and delivery checks above still apply.
+
+## Monitor a WhatsApp inbox in ChatGPT
+
+In a supported ChatGPT Work chat, a user can ask “Watch our WhatsApp support inbox and draft a reply here for each new customer message.” Resolve the workspace and inbox with workspace_whoami and inbox_list. Subscribe to `support.message.created` using both `workspace_id` and `inbox_id`. Each notification identifies a conversation and message. Read the conversation, check whether a teammate or hosted autopilot has already answered, and follow the user's requested action and normal reply approval rules. Use the chat's stop-monitoring action to unsubscribe.
+
+This is a native ChatGPT webhook subscription and works while the operator's laptop is offline. It starts with new messages. ChatGPT Work on web, desktop Work with Cloud selected, and dots support these tasks, subject to workspace controls. A local Claude Code channel or standalone draft watcher has its own setup above.
