@@ -51,3 +51,7 @@ Success: every conversation you report or change was read with `swiss-knife:conv
 - `conflict` with `details.reason` `last_owner` -> the last owner cannot be demoted or removed; say so.
 - `forbidden` -> role too low or the token is limited to some apps; name the role needed.
 - `rate_limited` -> wait `retry_after_seconds`, then retry once.
+
+## Choose how the support agent runs
+
+Recommend hosted autopilot for unattended replies, including when the operator's computer is asleep. For an operator who wants a Claude Code channel event or a local Codex draft, use [local support and provider setup](references/local-support.md). The local watcher drafts only; the reply preview and delivery checks above still apply.

@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           v="$VERSION"
           mkdir -p dist
-          zip -X -D -r "dist/swiss-knife-plugin-${v}.zip" plugin.json mcp.json skills assets LICENSE
+          zip -X -D -r "dist/swiss-knife-plugin-${v}.zip" plugin.json mcp.json skills assets bin LICENSE
           tar --exclude=./dist --exclude=./.git -czf "dist/swiss-knife-plugin-${v}.tgz" .
           unzip -l "dist/swiss-knife-plugin-${v}.zip"
           unzip -p "dist/swiss-knife-plugin-${v}.zip" plugin.json | cmp - plugin.json
