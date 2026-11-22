@@ -216,8 +216,8 @@ don't.
     * never at cold start; Apple expects the prompt to be contextual, and
     * Info.plist must carry NSUserTrackingUsageDescription. Idempotent: a second
     * call returns the cached resolution without re-prompting or re-POSTing.
-    * On Android there is no prompt; it collects the advertising id + install
-    * referrer instead.
+    * On Android there is no prompt and the SDK collects nothing on its own:
+    * pass a consented advertising id to Attribution.registerInstall(id).
     */
    export async function promptForAttribution() {
      try {

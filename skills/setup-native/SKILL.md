@@ -399,8 +399,10 @@ the green light.
 **5. Track events and read attribution (optional).** Event names must be ones the
 user wants in analytics (`swiss-knife:event_list` shows what already exists; do
 not invent a taxonomy). `configure` initialises analytics and registers the
-install on the first launch (organic unless a campaign link matched, via the Play
-install referrer); you only read it.
+install on the first launch (organic unless a campaign link matched); you only
+read it. The Android SDK sends an advertising id or the Play install referrer
+only when the app registers collectors with `Attribution.setCollectors(...)`
+before `configure`; it adds no Play services dependency of its own.
 
 ```kotlin
 import com.appswissknife.analytics.SKAnalytics
