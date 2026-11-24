@@ -55,6 +55,7 @@ One line each; the full table is in references/pitfalls.md (read when any step f
 - `play_upload_key_mismatch` -> the bundle was signed with a different key than Play registered. Stop; human action: save the right keystore, or reset the upload key in Play Console. Never generate a new key for this app.
 - Private repo, clone fails -> `git_token` (fine-grained, read-only Contents).
 - Release in review on Play (`play_release_in_review`) -> wait, or the user chooses `replace_in_review`; that cancels the review, so it needs their say-so.
+- `changes_not_sent_for_review` -> after a Google Play rejection Google sends no change for review by itself, and an upload is refused rather than queued. Relay the person's step (send the waiting changes for review in Play Console's Publishing overview; no API can), then retry the upload after they say it is done.
 
 ## Private build environment input
 

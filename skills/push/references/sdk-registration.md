@@ -1,6 +1,6 @@
 # SDK registration (React Native)
 
-Read when `swiss-knife:push_device_list` shows no devices for the audience. Installing and configuring the SDK itself is setup-sdk; this is only the push part. Check the installed package for its `Notifications` export. Published 0.4.0 lacks the module. For that version, use the documented device and event HTTP endpoints or a package that includes the module.
+Read when `swiss-knife:push_device_list` shows no devices for the audience. Installing and configuring the SDK itself is setup-sdk; this is only the push part. Check the installed package for its `Notifications` export. Versions before 0.5.0 lack the module. With one of those, use the documented device and event HTTP endpoints, or move the app to a version that includes the module.
 
 ## Native mode (no push library in the app)
 
