@@ -16,6 +16,8 @@ Read before triaging issues or creating, changing or deleting an alert rule.
 - `metric_crash_free_users` / `metric_crash_free_sessions`: `thresholdWarning` and `thresholdCritical` as percentages, `metricWindowHours`, `minSessions`.
 - `actionIntervalMinutes` is the cooldown between notifications; leave it unset unless the user asks.
 - Targets: `notifyEmail`, `notifyWebhookUrl`. Both optional; `null` clears one on update.
+- `notifyEmail` must be a current workspace member's verified email. Any other address is refused as `invalid_request`, and the message lists the allowed ones. A member's unconfirmed address comes back with a `human_action` for that member: relay it, then send the same call again. Removing a member clears their address from the rules.
+- Limits: at most 50 rules per app (`precondition_failed`: change or delete one instead). A rule emails at most once per 15 minutes; what fires in between arrives in its next digest. Alert mail is also capped per recipient and per workspace each hour.
 
 ## Create flow
 

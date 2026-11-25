@@ -9,12 +9,12 @@ one at a time, by symptom.
 Three calls write user data — they land in **three different places**, only two of
 which touch the person — plus a fourth that needs nothing from you at all:
 
-| Call                                          | Where it lands                                            | Person card?                                                         |
-| --------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
-| `Identity.logIn(id)` — Step 6                 | the app-user's `external_user_id`                         | **Yes** — creates and links the workspace person                     |
-| `Attributes.set({ … })` / `setEmail(…)`       | the app-user's `properties`; reserved `$`-keys go further | **Yes** — links the person, and this is what actually fills the card |
-| `Analytics.identify(new SKIdentify().set(…))` | user properties on the analytics event stream             | **No** — nothing you send here reaches the person card               |
-| `CrashReporting.setUser({ … })`               | the subject on crash reports                              | n/a — the id is **already pulled from `Identity`** at report time    |
+| Call                                          | Where it lands                                            | Person card?                                                                                    |
+| --------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `Identity.logIn(id)` — Step 6                 | the app-user's `external_user_id`                         | **Yes** — creates and links the workspace person                                                |
+| `Attributes.set({ … })` / `setEmail(…)`       | the app-user's `properties`; reserved `$`-keys go further | **Yes** — this is what actually fills the card (an email or phone shows as an unverified claim) |
+| `Analytics.identify(new SKIdentify().set(…))` | user properties on the analytics event stream             | **No** — nothing you send here reaches the person card                                          |
+| `CrashReporting.setUser({ … })`               | the subject on crash reports                              | n/a — the id is **already pulled from `Identity`** at report time                               |
 
 So: **`Attributes.*` is the only path to the person card** — `set` writes it
 directly, `identify` segments events, and `setUser` is an override you almost
@@ -69,6 +69,17 @@ typed helpers instead of hand-rolling the reserved keys —
 `await Attributes.setDisplayName(user.name)` (also `setPhoneNumber`,
 `setPushToken`). They validate the format server-side and are what the dashboard
 renders as the person's name and email.
+
+An email or phone sent this way is a **claim**, not a proof: the app's public key
+ships inside the binary, so anyone holding it can send any address. swiss-knife
+stores it on the person as an unverified identifier (`people_detail` marks the
+alias `metadata.claimed: true`): People search and the leads filter use it, but
+it never merges two people and the support AI does not follow it to the person.
+When the app's backend has already verified the address, make the link verified
+from there: call `POST /api/sdk/users/identify` with an agent credential (an
+admin's `sk_mcp_` token, write scope, the app in `X-App-Project-Id`) instead of the public key, or add it with
+`swiss-knife:person_update` `add_alias`. Never put an agent credential in the
+app.
 
 `Attributes.set` and its helpers need **core** configured, which `configure`,
 `configureCore` and even `Analytics.init` all satisfy — so this works in an

@@ -115,9 +115,11 @@ Run these in order. Capture each result; you need specific fields downstream.
    it is a credential meant for CI and other machines), omit `notifyEmail` and do
    not invent one — a rule pointed at the wrong inbox is worse than a rule with no
    inbox. Use an address only if the user has already given it to you in this
-   conversation. A target can always be added afterwards **through MCP**, not the
-   dashboard: `error_alert_list({ app_project_id })` shows the app's rules and
-   their `id`, and `error_alert_update({ rule_id, notifyEmail })` sets (or, with
+   conversation, and only a workspace member's verified email: any other
+   address is refused, and the refusal lists the allowed ones. A target can
+   always be added afterwards **through MCP**, not the dashboard:
+   `error_alert_list({ app_project_id })` shows the app's rules and their `id`,
+   and `error_alert_update({ rule_id, notifyEmail })` sets (or, with
    `null`, clears) the target; `active: false` pauses a rule and
    `error_alert_delete({ rule_id })` removes it. On a re-run, call
    `error_alert_list` first and reuse the existing `new_issue` rule (update its
