@@ -1,6 +1,6 @@
 ---
 name: setup-native
-description: The native-stack half of the Swiss-Knife setup wizard — the recipes that vendor the iOS SDK (a local Swift package, SwissKnifeiOS) and the Android SDK (Kotlin source, com.appswissknife) out of the public npm package, plus the fallback for web / unrecognized stacks. Loaded by /swiss-knife:setup-sdk when Step 1 detects a native iOS (Xcode project / Package.swift, no React Native) or native Android (Gradle + Kotlin, no React Native) project, or a stack it does not recognize. Covers the dependency, gitignored secret injection, the configure call and the getOfferings smoke test; identity and verification stay in the main setup skill.
+description: The native-stack half of the Swiss-Knife setup wizard — adds the iOS SDK (SwissKnifeiOS) as a Swift package from its public repository and vendors the Android SDK (Kotlin source, com.appswissknife) out of the public npm package, plus the fallback for web / unrecognized stacks. Loaded by /swiss-knife:setup-sdk when Step 1 detects a native iOS (Xcode project / Package.swift, no React Native) or native Android (Gradle + Kotlin, no React Native) project, or a stack it does not recognize. Covers the dependency, gitignored secret injection, the configure call, the getOfferings smoke test and the iOS purchase options (appAccountToken, silent entitlement sync, trial eligibility, transaction events); identity and verification stay in the main setup skill.
 allowed-tools: Read, Edit, Write, Grep, Glob, Bash(cat *), Bash(ls *)
 ---
 
@@ -24,12 +24,13 @@ repository has the same file: `skills/setup-native/SKILL.md` in
 ## Native iOS (Swift / SwiftUI / UIKit)
 
 The iOS SDK is the Swift module **`SwissKnifeiOS`**, **iOS 15.0+**, zero external
-dependencies, vendored into the app as a local Swift package (sub-step 1). (The
+dependencies, added to the app as a Swift package (sub-step 1). (The
 React Native pod declares 15.1 — the RN/Expo default deployment target — but the
 native path is 15.0.) Public API:
 `SwissKnife.configure(...)`, `SwissKnife.configureCore(...)`,
 `SwissKnife.configurePurchases(...)`, `SwissKnife.isConfigured`,
-`SwissKnife.isCoreConfigured`, and `try await SwissKnife.getOfferings()`.
+`SwissKnife.isCoreConfigured`, `try await SwissKnife.getOfferings()`, and the
+purchase calls in sub-step 6.
 
 `configure` is exactly `configureCore` followed by `configurePurchases`. Unlike
 React Native, native **does** expose the two halves separately, so an iOS app can
@@ -49,7 +50,7 @@ SDK — see the Step 2 hazard. `isConfigured` reports the purchase engine and st
 Do Steps 1–4 first (workspace, app, token, `.mcp.json` + `.envrc` for the MCP
 token — those are stack-agnostic and still useful in an Xcode project). The SDK
 API key does **not** go in an `EXPO_PUBLIC_*` var on native — inject it as in
-sub-step 2 below. Then, instead of Step 5, do the five sub-steps below — and
+sub-step 2 below. Then, instead of Step 5, do the six sub-steps below — and
 afterwards still run **Step 6 (identity)**, **Step 8 (the user's data)** and
 **Step 9 (verify)**, which apply to every stack. The Swift identity calls are in
 Step 6.
@@ -57,20 +58,48 @@ Step 6.
 **Capability coverage on native.** The Analytics / CrashReporting / Performance /
 Attribution wiring in Step 5 is a **React-Native** surface, and so is **Step 7's
 analytics boundary** — skip it here rather than pretending. This recipe covers
-`configure`, `getOfferings`, identity, and the two snippets in sub-step 5 (track an
-event, read install attribution). If the user ticked crash reporting or
-performance in Step 2, say plainly that those aren't wired here — do **not**
-hand-roll `fetch` calls against the ingest endpoints to fake them.
+`configure`, `getOfferings`, identity, the two snippets in sub-step 5 (track an
+event, read install attribution) and the purchase options in sub-step 6. If the
+user ticked crash reporting or performance in Step 2, say plainly that those
+aren't wired here — do **not** hand-roll `fetch` calls against the ingest
+endpoints to fake them.
 
-**1. Add the dependency (vendor it from the public npm package).**
+**1. Add the dependency (the Swift package).**
 
-> ⚠️ **The iOS SDK is not published to SPM or CocoaPods** — there is no
-> repository with a `Package.swift` to point a URL dependency at and no pod, so
-> an SPM URL or a `pod` line will not resolve. (This gap is native-only: the
-> React Native package _is_ on npm.) Its Swift sources ship unmodified inside the
-> public npm package `@app-swiss-knife/react-native-sdk`, so any machine with npm
-> can vendor them with no checkout of anything. Tell the user plainly that the
-> SDK is vendored, then do this from the app's root:
+The iOS SDK is published as a Swift package in its public repository,
+**https://github.com/Remneys/swiss-knife-ios**, tagged with the SDK version
+(`x.y.z`, no `v`). There is no pod on CocoaPods trunk, so a `pod` line will not
+resolve. List the releases first:
+
+```bash
+git ls-remote --tags --refs https://github.com/Remneys/swiss-knife-ios
+```
+
+Use the newest tag. If the command lists no tag, or this machine cannot reach
+GitHub, vendor the sources instead (the fallback below).
+
+If the app has a `Package.swift`, add the package and the product to the
+target's `dependencies`:
+
+```swift
+.package(url: "https://github.com/Remneys/swiss-knife-ios", from: "<newest tag>"),
+```
+
+```swift
+.product(name: "SwissKnifeiOS", package: "swiss-knife-ios"),
+```
+
+For an `.xcodeproj` with no `Package.swift`, add it in Xcode → File → Add Package
+Dependencies…, enter the repository URL, pick Up to Next Major Version from the
+newest tag, and add the `SwissKnifeiOS` library to the app target. A Notification
+Service Extension target (rich push images) takes the
+`SwissKnifeNotificationService` product of the same package instead, never
+`SwissKnifeiOS`.
+
+**Fallback: vendor it from the public npm package.** The same Swift sources ship
+unmodified inside the public npm package `@app-swiss-knife/react-native-sdk`, so
+any machine with npm can vendor them with no checkout of anything. Tell the user
+plainly that the SDK is vendored, then do this from the app's root:
 
 ```bash
 mkdir -p Vendor/SwissKnifeiOS/Sources
@@ -228,6 +257,12 @@ Verify with `swiss-knife:event_list` (the event appears within a minute of a
 foreground flush) and, for a campaign link test, `swiss-knife:attribution_report`
 (read the attribution skill's testing checklist). A deferred deep link is
 retrieved from the same resolved attribution; route on it once, on first open.
+
+**6. Purchases: account token, silent sync, trial eligibility, transaction
+events (optional).** When the app sells anything or has a Restore Purchases
+button, read references/ios-purchases.md: `appAccountToken` on purchases,
+`restorePurchases()` versus `syncCurrentEntitlements()`, intro-offer
+eligibility, transaction events, and a local StoreKit test file.
 
 ---
 
@@ -424,15 +459,16 @@ open.
 
 ## Native dependency install — honest framing (applies to BOTH recipes above)
 
-This caveat is **native-only**. The React Native package installs from npm like any
-other dependency; the two standalone native SDKs are not published to SPM,
-CocoaPods, Maven Central or JitPack. The dependency works today only by
-vendoring: the sources are copied out of the public npm package into the app (a
-local Swift package, or Kotlin source in the app module), exactly as above, and
-they do not update by themselves, so re-run the copy to take a newer SDK.
-Everything else the wizard does is unaffected: backend provisioning, the config
-files, and the exact `configure` + smoke-test wiring above. Say so once, calmly,
-and finish the wiring.
+The React Native package installs from npm like any other dependency. The native
+iOS SDK is a Swift package from its public repository: take a newer SDK by
+raising the version and resolving packages again. It is not on CocoaPods trunk.
+The native Android SDK is not published to Maven Central or JitPack: it works
+only by vendoring the Kotlin sources out of the public npm package into the app
+module, exactly as above. A vendored copy (Android, or the iOS fallback) does
+not update by itself, so re-run the copy to take a newer SDK. Everything else
+the wizard does is unaffected: backend provisioning, the config files, and the
+exact `configure` + smoke-test wiring above. Say so once, calmly, and finish the
+wiring.
 
 ---
 

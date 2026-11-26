@@ -18,12 +18,12 @@ It bundles two things:
 | -------------------- | --------------------------------------------------------------------------------------------------------- |
 | `swiss-knife`        | Connect the MCP server, start with `help`, pick a skill, relay human steps and approvals.                 |
 | `setup-sdk`          | Provision a workspace and app and wire the mobile SDK (Expo / React Native).                              |
-| `setup-native`       | The native iOS / Android half of the setup wizard (the SDK sources vendored from the public npm package). |
+| `setup-native`       | The native iOS / Android half of the setup wizard (iOS as a Swift package, Android vendored from npm).    |
 | `ship-ios`           | Build an iOS app and put it in TestFlight, checked against App Store Connect.                             |
 | `ship-android`       | Build an Android app and put it on the Play internal track, checked against Google Play.                  |
 | `store-listings`     | Edit listing text, translations, screenshots and age rating on both stores, checked against the store.    |
 | `submit-release`     | Submit for review, phased rollout and promotion, using connected write permissions.                       |
-| `monetization`       | Products, entitlements, offerings and the store catalogue push.                                           |
+| `monetization`       | Products, offerings, the catalogue push, paywall drafts and targeting, one customer's grants and refunds. |
 | `push`               | Push credentials (APNs, FCM), sending with a dry run, and device hygiene.                                 |
 | `observability`      | Events, funnels, subscription and crash stats, error issues and alerts.                                   |
 | `attribution`        | Campaign links, install attribution, deferred deep links and campaign subscription results.               |

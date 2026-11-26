@@ -96,8 +96,11 @@ For Google Play managed publishing on/off and publishing approved changes togeth
 | Edit store texts, translations, screenshots, age rating    | `store-listings`                                 |
 | Submit for App Review, phased rollout, promote to users    | `submit-release`                                 |
 | Products, subscriptions, entitlements, offerings, prices   | `monetization`                                   |
+| A customer's subscription, free grant, extension or refund | `monetization`                                   |
+| Which paywall users see, paywall drafts, paywall tests     | `monetization`                                   |
 | Push notifications (APNs / FCM keys, sending)              | `push`                                           |
 | Events, funnels, subscription stats, crashes, error alerts | `observability`                                  |
+| Subscription charts over time (MRR, churn, trials)         | `observability`                                  |
 | Saved reports, cohorts, boards, anomalies, error merging   | `observability`                                  |
 | Support inbox, replies, teammates, people                  | `support-inbox`                                  |
 | Campaign links, install attribution, deferred deep links   | `attribution`                                    |
