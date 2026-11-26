@@ -1,6 +1,6 @@
 # Help one customer
 
-Read when the user asks about one customer's subscription or purchase, or wants to give them free access, extend a subscription or refund one.
+Read when the user asks about one customer's subscription or purchase, or wants to give them free access, extend a subscription, refund one, or reset a tester's sandbox purchases.
 
 Success: everything you report was read in this conversation, and a change shows in a re-read: a grant at once, a store action once the store's notification has arrived.
 
@@ -9,6 +9,7 @@ Success: everything you report was read in this conversation, and a change shows
 - Find the customer and what they bought
 - Free access: a promotional grant
 - At the store: extend or refund
+- A tester's sandbox purchases
 - When it breaks
 
 ## Find the customer and what they bought
@@ -46,15 +47,25 @@ Only when the person asked for a store-side change. Every step names the same `s
 4. **App Store refunds.** Apple refunds only at the customer's request: the answer is `needs_manual_action` with the customer's own step in `human_action`, and nothing is sent. Relay it.
 5. **Verify.** swiss-knife's rows change when the store's notification arrives, not when the call returns. Re-read `swiss-knife:subscription_get` (expiry date, status) and `swiss-knife:subscription_transactions` (an `extension` or `refund` row). Until the row is there, report the action as sent, with the answer's `mutation_id`, not as done. The same plan sent again is answered from the store-write log, not sent twice.
 
+## A tester's sandbox purchases
+
+When a tester wants to buy again from scratch and the old sandbox or test purchase keeps coming back (the SDK's anonymous id survives a reinstall, so a new sandbox account on the same device is still the same customer).
+
+1. `swiss-knife:customer_sandbox_reset` (admin) with `app_project_id` and `app_user_id` (any id of the customer: the logIn id, the SDK's anonymous id, the app user row id, a verified email). Leave `dry_run` true (the default) and show the person `remove` (rows, products, store transaction ids, the `evidence` that each is sandbox), `others_losing_access` (other customers a removed shared purchase gave access to) and `skipped` (production purchases, and purchases whose environment is unknown, disputed or only the app's own word, with the `reason`). `products` limits it to some products. An anonymous id in `customer.excluded_keys` is another customer's too, so their purchases filed under it stay.
+2. Only when the plan is what the person asked for, the same call with `dry_run: false` and the dry run's `plan_fingerprint`. It removes exactly that plan; a `conflict` with a new `plan_fingerprint` means the purchases changed since, nothing was removed: dry run again and show the new plan. It never touches production purchases, promotional grants, the person or their events, and a repeat removes nothing. Report `audit_id` and `access` (what the app sees now).
+3. Relay `human_action`: the store still holds the test purchase (a renewing sandbox subscription: cancel it on the test device first; App Store Connect: clear the sandbox tester's purchase history, or use a new sandbox tester; Play Console's Order management: refund the license tester's order with Remove entitlement, or revoke a test subscription). Without it a restore or a renewal brings the purchase back, and until the app is relaunched the SDK's cached customer info can still show access. Afterwards `verify_with`, a dry run, must find nothing to remove.
+4. A purchase in `skipped` as `unknown_environment`, `conflicting_environment` or `unverified_environment` is not removed by any call; say so, do not work around it.
+
 ## When it breaks
 
-| Situation                                                     | What to do                                                                                                                                |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `not_found` from `swiss-knife:subscription_get`               | No subscription of this app has that id. Try the id the customer quoted as `transaction_id`, or start from `swiss-knife:people_detail`.   |
-| `people_detail` answers `person: null`, `linked: false`       | The app user exists but is not linked to a person yet; its `appUser` still names the customer. Not a wrong id.                            |
-| `precondition_failed`, reason `fingerprint_mismatch`          | The subscription or the request changed since the preview. Nothing was sent. Dry run again and show the new plan.                         |
-| `precondition_failed`, reason `subscription_actions_disabled` | The app's switch is off. Step 1, only if the person asked for store-side actions.                                                         |
-| `forbidden`, `approval_required`                              | Relay the `human_action` and wait for the person's code. Do not retry without it.                                                         |
-| `needs_manual_action`                                         | An App Store refund. Relay the customer's step.                                                                                           |
-| `conflict` from `swiss-knife:customer_entitlement_grant`      | The entitlement is archived (`swiss-knife:entitlement_unarchive` restores it), or the `idempotency_key` was used for a different request. |
-| `forbidden` on a grant, extension or refund                   | These need the admin role. Name who can do it.                                                                                            |
+| Situation                                                     | What to do                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `not_found` from `swiss-knife:subscription_get`               | No subscription of this app has that id. Try the id the customer quoted as `transaction_id`, or start from `swiss-knife:people_detail`.                                                                                                       |
+| `people_detail` answers `person: null`, `linked: false`       | The app user exists but is not linked to a person yet; its `appUser` still names the customer. Not a wrong id.                                                                                                                                |
+| `precondition_failed`, reason `fingerprint_mismatch`          | The subscription or the request changed since the preview. Nothing was sent. Dry run again and show the new plan.                                                                                                                             |
+| `precondition_failed`, reason `subscription_actions_disabled` | The app's switch is off. Step 1, only if the person asked for store-side actions.                                                                                                                                                             |
+| `forbidden`, `approval_required`                              | Relay the `human_action` and wait for the person's code. Do not retry without it.                                                                                                                                                             |
+| `needs_manual_action`                                         | An App Store refund. Relay the customer's step.                                                                                                                                                                                               |
+| `conflict` from `swiss-knife:customer_entitlement_grant`      | The entitlement is archived (`swiss-knife:entitlement_unarchive` restores it), or the `idempotency_key` was used for a different request.                                                                                                     |
+| `forbidden` on a grant, extension or refund                   | These need the admin role. Name who can do it.                                                                                                                                                                                                |
+| `conflict` from `swiss-knife:customer_sandbox_reset`          | The id names two different customers (send one only that customer has, their app user row id from `swiss-knife:people_detail`), or the purchases changed since the dry run (`details.plan_fingerprint`: dry run again and show the new plan). |
