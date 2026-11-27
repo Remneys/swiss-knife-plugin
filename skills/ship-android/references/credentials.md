@@ -12,7 +12,7 @@ Read when a credential is missing or invalid, the fingerprint is unknown, or the
 
 ## Play service account
 
-Creating the service account and granting it access in Play Console is a human step (no API). If `swiss-knife:ship_prerequisites` says the app is not visible to it, relay its `human_action` and pause only work requiring that access. Once the user has the JSON key:
+Creating the service account and granting it access in Play Console is a person's step, signed in to Google. The `human_action` from `swiss-knife:ship_prerequisites` (or `swiss-knife:build_credentials_validate`) names both ways: `swiss-build google setup` on the person's own computer (it enables the Play APIs, creates the service account and its JSON key, grants it the app in Play Console and stages the key for `swiss-knife:build_credential_upload_authorize`), or the consoles by hand. When the app is not visible to a saved key, the step is `swiss-build google setup --grant-only` (no new key) or the person's invite in Play Console. Relay the `human_action` as it comes and pause only work requiring that access. Once the user has the JSON key from the consoles:
 
 ```
 swiss-knife:build_credentials_save
